@@ -3,6 +3,7 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 Run the following commands to run the react applicaiton error free on your system
+
 In the /frontend directory run the following command
 ### `npm install`
 
