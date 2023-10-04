@@ -4,6 +4,7 @@ import { Password } from "../utils/password";
 interface UserAttrs {
     email: string;
     password: string;
+    searchHistoryIds: string[];
 }
 
 interface UserModel extends mongoose.Model<UserDoc> {
@@ -13,7 +14,7 @@ interface UserModel extends mongoose.Model<UserDoc> {
 interface UserDoc extends mongoose.Document {
     email: string;
     password: string;
-    searchHistory: string[];
+    searchHistoryIds: string[];
 }
 
 const UserSchema = new mongoose.Schema({
@@ -25,7 +26,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    searchHistory: {
+    searchHistoryIds: {
         type: [String],
         required: false
     }

@@ -9,23 +9,17 @@ import { Password } from '../utils/password';
 const router = express.Router();
 
 router.post('/api/users/signup', [
-    body('email')
-        .isEmail()
-        .contains('@illinicloud.edu')
-        .withMessage('Email must be valid'),
-    body('password')
-        .trim()
-        .isLength({ min: 4, max: 20 })
-        .withMessage('Password must be between 4 and 20 characters')
+    body('email').isEmail().contains('@illinois.edu').withMessage('Email must be valid'),
+    body('password').trim().isLength({ min: 4, max: 20 }).withMessage('Password must be between 4 and 20 characters')
 ], validateRequest, async (req: Request, res: Response) => {
     const { email, password } = req.body
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-        return new BadRequestError('Email in use');
+        throw new BadRequestError('Email in use');
     }
 
-    const user = User.build({ email, password });
+    const user = User.build({ email, password, searchHistoryIds: [] });
     await user.save();
 
     // Generate JWT
@@ -44,24 +38,19 @@ router.post('/api/users/signup', [
 });
 
 router.post('/api/users/signin', [
-    body('email')
-    .isEmail()
-    .withMessage('Email must be valid'),
-    body('password')
-    .trim()
-    .notEmpty()
-    .withMessage('Password can not be empty')
+    body('email').isEmail().withMessage('Email must be valid'),
+    body('password').trim().notEmpty().withMessage('Password can not be empty')
 ], validateRequest, async (req: Request, res: Response) => {
     const { email, password } = req.body
 
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
-        return new BadRequestError('Invalid email or password');
+        throw new BadRequestError('Invalid email or password');
     }
 
     const passwordMatch = await Password.compare(existingUser.password, password);
     if (!passwordMatch) {
-        return new BadRequestError('Invalid email or password');
+        throw new BadRequestError('Invalid email or password');
     }
 
     // Generate JWT
