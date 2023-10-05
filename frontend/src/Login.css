@@ -1,6 +1,8 @@
-.container{
+.login-container{
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
     margin: auto;
     margin-top: 200px;
     width: 600px;
@@ -8,36 +10,35 @@
     padding-bottom: 30px;
 }
 
-.header{
+.login-header{
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 9px;
+    /* gap: 9px; */
     width: 100%;
-    margin-top: 30px;
 }
 
-.text{
+.login-text{
     color: #3c009d;
     font-size: 48px;
     font-weight: 700;
 }
 
-.underline{
+.login-underline{
     width: 61px;
     height: 6px;
     background: #3c009d;
     border-radius: 9px;
 }
 
-.inputs{
+.login-inputs{
     display: flex;
     flex-direction: column;
     gap: 25px;
     margin-top: 55px;
 }
 
-.input{
+.login-input{
     display: flex;
     align-items: center;
     margin: auto;
@@ -47,11 +48,11 @@
     border-radius: 6px;
 }
 
-.input .icon{
+.login-icon{
     margin: 0px 30px;
 }
 
-.input input{
+.login-input input{
     width: 400px;
     height: 50px;
     background: transparent;
@@ -61,25 +62,27 @@
     font-size: 19px;
 }
 
-.forgot-password{
+.login-forgot-password{
     padding-left: 62px;
     margin-top: 27px;
     color: #797979;
     font-size: 18px;
 }
 
-.forgot-password span{
+.login-forgot-password span{
     color: #4c00b4;
     cursor: pointer;
 }
 
-.submit-container{
+.login-submit-container{
     display: flex;
     gap: 30px;
     margin: 60px auto;
 }
 
-.submit{
+/* .login-password-reset-modal {} */
+
+.submit {
     display: flex;
     justify-content: center;
     align-items: center;
