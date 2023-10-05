@@ -61,50 +61,6 @@
     /* Add any other styles you want */
   }
   
-  /* Style for custom checkbox */
-input[type="checkbox"] {
-    /* Hide the default checkbox */
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    width: 20px;
-    height: 20px;
-    border: 2px solid black; /* Black border */
-    border-radius: 4px;
-    outline: none;
-    position: relative;
-    cursor: pointer;
-    margin-right: 5px;
-  }
-  
-  /* Style for custom checkbox when checked */
-  input[type="checkbox"]:checked {
-    background-color: rgb(16, 219, 16); /* Green background when checked */
-  }
-  
-  /* Style for the checkmark/tick */
-  input[type="checkbox"]::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 10px;
-    height: 5px;
-    border: 2px solid white; /* White tick mark */
-    border-top: none;
-    border-right: none;
-    transform-origin: center;
-    transform: rotate(0deg);
-    opacity: 0;
-  }
-  
-  /* Style for the checkmark/tick when checkbox is checked */
-  input[type="checkbox"]:checked::before {
-    opacity: 1;
-  }
-  
-
 input[type="text"] {
     width: 50%; 
     padding: 10px; 

@@ -108,7 +108,7 @@ function Search() {
                         />
                         <input
                         type='text'
-                        placeholder='Enter text'
+                        placeholder='Enter analogy'
                         value={textData[index]}
                         onChange={(e) => handleTextChange(index, e.target.value)}
                         />
