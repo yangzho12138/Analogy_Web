@@ -1,0 +1,32 @@
+import express from 'express'
+import { json } from 'body-parser'
+import 'express-async-errors'
+import cookieSession from 'cookie-session'
+import { userRouter } from './routes/userRoutes'
+import { NotFoundError } from '../../common/src/errors/not-found-error';
+import { errorHandler } from '../../common/src/middlewares/error-handler';
+import { searchRouter } from './routes/searchRoutes'
+import { currentUser } from '../../common/src/middlewares/current-user';
+
+const app = express()
+app.set('trust proxy', true) // https
+app.use(json())
+app.use(cookieSession({
+    signed: false,
+    secure: process.env.NODE_ENV !== 'test' // need https request (test env: false -> http)
+}))
+
+app.use(currentUser)
+app.use(userRouter)
+app.use(searchRouter)
+
+app.all('*', async (req, res) => { 
+    throw new NotFoundError()
+})
+
+app.use(errorHandler)
+
+export { app }
+
+
+
