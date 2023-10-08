@@ -4,6 +4,7 @@ import { requireAuth } from '../../../common/src/middlewares/require-auth';
 import { validateRequest } from '../../../common/src/middlewares/validate-request';
 import mongoose from 'mongoose';
 import { Concept } from '../models/concept';
+import { SearchHistory } from '../models/searchHistory';
 
 const router = express.Router();
 
@@ -48,42 +49,29 @@ router.get('/api/concept/getAll', requireAuth, validateRequest, async (req: Requ
 // select concepts
 // return the successfully selected concepts
 router.post('/api/concept/select', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { concepts } = req.body;
+    const { concept } = req.body;
 
-    if(!concepts || !Array.isArray(concepts)) {
+    if(!concept) {
         throw new BadRequestError('Invalid concept');
     }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // lock the document
+    const existingConcept = await Concept.findOneAndUpdate({ 
+        _id: concept,
+        status: false
+     },{
+        status: true,
+        userId: req.currentUser!.id
+     },
+     {
+         new: true,
+    });
 
-    try{
-        let selectedConcepts = [];
-        for(let i = 0; i < concepts.length; i++){
-            // lock the document
-            const existingConcept = await Concept.findOneAndUpdate({ 
-                _id: concepts[i],
-                status: false
-             },{
-                status: true,
-                userId: req.currentUser!.id
-             },
-             {
-                 new: true,
-                 session
-            });
-            if(existingConcept){
-                selectedConcepts.push(existingConcept);
-            }
-        }
-        await session.commitTransaction();
-        res.status(201).send({selectedConcepts});
-    } catch(err) {
-        await session.abortTransaction();
-        res.status(500).send('Error selecting concepts');
-    } finally {
-        await session.endSession();
+    if(!existingConcept){
+        return res.status(500).send('Concept not found or already selected');
     }
+
+    res.status(201).send({existingConcept});
 });
 
 // unselect concepts
@@ -95,6 +83,14 @@ router.post('/api/concept/unselect', requireAuth, validateRequest, async (req: R
     }
 
     try{
+        const searchHistorySubmmitedIncludConcept = await SearchHistory.findOne({
+            concept: concept,
+            submitted: true
+        });
+        if(searchHistorySubmmitedIncludConcept && searchHistorySubmmitedIncludConcept.userId === req.currentUser!.id){
+            return res.status(200).send('Concept included in submitted search history');
+        }
+
         const releasedConcept = await Concept.findOneAndUpdate({ 
             _id: concept,
             status: true,

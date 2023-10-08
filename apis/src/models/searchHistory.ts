@@ -4,7 +4,7 @@ interface SearchHistoryAttrs {
   userId: string;
   searchKeyword: string;
   tag: string;
-  concepts: string[];
+  concept: string;
   searchRecordIds: string[];
 }
 
@@ -16,8 +16,9 @@ interface SearchHistoryDoc extends mongoose.Document {
   userId: string;
   searchKeyword: string;
   tag: string;
-  concepts: string[];
+  concept: string;
   searchRecordIds: string[];
+  submitted: boolean;
 }
 
 const SearchHistorySchema = new mongoose.Schema(
@@ -34,13 +35,18 @@ const SearchHistorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    concepts: {
-      type: [String],
+    concept: {
+      type: String,
       required: false,
     },
     searchRecordIds: {
       type: [String],
       required: false,
+    },
+    submitted: {
+      type: Boolean,
+      required: true,
+      default: false,
     },
   },
   {

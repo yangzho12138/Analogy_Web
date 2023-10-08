@@ -6,6 +6,7 @@ import { requireAuth } from '../../../common/src/middlewares/require-auth';
 import { validateRequest } from '../../../common/src/middlewares/validate-request';
 import { User } from '../models/users';
 import { SearchRecord } from '../models/searchRecord';
+import { Concept } from '../models/concept';
 import mongoose from 'mongoose';
 
 const router = express.Router();
@@ -31,10 +32,17 @@ async function fetchBingAPI(query : string){
 
 // use bing api to search for query
 router.post('/api/search', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { query, tag, concepts } = req.body;
+    const { query, tag, concept } = req.body;
 
     if(!query || !tag) {
         throw new BadRequestError('Invalid query or tag');
+    }
+
+    if(concept){
+        const choosenConcept = await Concept.findOne({ _id: concept });
+        if(!choosenConcept || !choosenConcept.status || choosenConcept.userId !== req.currentUser!.id){
+            throw new BadRequestError('Invalid concept');
+        }
     }
 
     let data = await fetchBingAPI(query);
@@ -47,7 +55,7 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
             userId: req.currentUser!.id,
             searchKeyword: query,
             tag: tag,
-            concepts: concepts,
+            concept: concept,
             searchRecordIds: []
         });
             
@@ -101,7 +109,7 @@ router.get('/api/search/getSearchHistoryDetail', requireAuth, validateRequest, a
     }
 
     const searchHistory = await SearchHistory.findById(searchHistoryId);
-    if(!searchHistory){
+    if(!searchHistory || searchHistory.userId !== req.currentUser!.id){
         throw new BadRequestError('Invalid search history id');
     }
 
@@ -115,7 +123,7 @@ router.get('/api/search/getSearchHistoryDetail', requireAuth, validateRequest, a
 })
 
 // save search history for a user
-// allow to change isRelevant and tag
+// allow to change isRelevant, relevantContent and tag
 router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async (req: Request, res: Response) => {
     const { searchRecords } = req.body;
 
@@ -148,6 +156,31 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
     }
 })
 
+// submit a search history for a user
+router.post('/api/search/submitSearchHistory', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const { searchHistoryId } = req.body;
+
+    if(!searchHistoryId) {
+        throw new BadRequestError('Invalid search history id');
+    }
+
+    const searchHistory = await SearchHistory.findById(searchHistoryId);
+    if(!searchHistory || searchHistory.userId !== req.currentUser!.id){
+        throw new BadRequestError('Invalid search history id');
+    }
+
+    if(searchHistory.concept){
+        const concept = await Concept.findOne({ _id: searchHistory.concept });
+        if(!concept || !concept.status || concept.userId !== req.currentUser!.id){
+            return res.status(500).send('Search history submit failed, this concept not be selected by the user');
+        }
+    }
+
+    searchHistory.submitted = true;
+    await searchHistory.save();
+
+    res.status(200).send('Search history submitted');
+})
 
 
 export { router as searchRouter };
