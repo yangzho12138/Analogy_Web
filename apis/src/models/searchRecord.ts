@@ -6,6 +6,7 @@ interface SearchRecordAttrs {
   isRelevant: number; // 
   title: string;
   url: string;
+  relevantContent: string;
 }
 
 interface SearchRecordModel extends mongoose.Model<SearchRecordDoc> {
@@ -18,6 +19,7 @@ interface SearchRecordDoc extends mongoose.Document {
   isRelevant: number;
   title: string;
   url: string;
+  relevantContent: string;
 }
 
 const SearchRecordSchema = new mongoose.Schema(
@@ -42,6 +44,10 @@ const SearchRecordSchema = new mongoose.Schema(
     url: {
       type: String,
       required: true,
+    },
+    relevantContent: {
+      type: String,
+      required: false,
     },
   },
   {

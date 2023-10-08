@@ -31,7 +31,7 @@ async function fetchBingAPI(query : string){
 
 // use bing api to search for query
 router.post('/api/search', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { query, tag } = req.body;
+    const { query, tag, concepts } = req.body;
 
     if(!query || !tag) {
         throw new BadRequestError('Invalid query or tag');
@@ -47,6 +47,7 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
             userId: req.currentUser!.id,
             searchKeyword: query,
             tag: tag,
+            concepts: concepts,
             searchRecordIds: []
         });
             
@@ -60,7 +61,8 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
                 title: data.webPages.value[i].name,
                 url: data.webPages.value[i].url,
                 isRelevant: 0,
-                tag: tag
+                tag: tag,
+                relevantContent: ''
             });
             await searchRecord.save({ session });
             searchHistory.searchRecordIds.push(searchRecord.id);
@@ -117,7 +119,7 @@ router.get('/api/search/getSearchHistoryDetail', requireAuth, validateRequest, a
 router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async (req: Request, res: Response) => {
     const { searchRecords } = req.body;
 
-    if(!searchRecords) {
+    if(!searchRecords || !Array.isArray(searchRecords)) {
         throw new BadRequestError('Invalid search history');
     }
 
@@ -132,6 +134,7 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
             }
             searchRecord.isRelevant = searchRecords[i].isRelevant;
             searchRecord.tag = searchRecords[i].tag;
+            searchRecord.relevantContent = searchRecords[i].relevantContent;
             await searchRecord.save({ session });
         }
         await session.commitTransaction();

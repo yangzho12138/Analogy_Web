@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 interface ConceptAttrs {
     name: string;
-    status: boolean; // false - not selected, true - selected
+    // status: boolean; // false - not selected, true - selected
 }
 
 interface ConceptDoc extends mongoose.Document {
