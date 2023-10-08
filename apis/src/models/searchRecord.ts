@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 interface SearchRecordAttrs {
   searchHistoryId: string;
   tag: string; // Bing / GPT
-  isRelevant: boolean;
+  isRelevant: number; // 
   title: string;
   url: string;
 }
@@ -15,7 +15,7 @@ interface SearchRecordModel extends mongoose.Model<SearchRecordDoc> {
 interface SearchRecordDoc extends mongoose.Document {
   searchHistoryId: string;
   tag: string;
-  isRelevant: boolean;
+  isRelevant: number;
   title: string;
   url: string;
 }
@@ -31,9 +31,9 @@ const SearchRecordSchema = new mongoose.Schema(
       required: true,
     },
     isRelevant: {
-      type: Boolean,
+      type: Number,
       required: true,
-      default: false,
+      default: 0,
     },
     title: {
       type: String,

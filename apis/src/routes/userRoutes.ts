@@ -65,7 +65,13 @@ router.post('/api/users/signin', [
         jwt: userJwt
     };
 
-    res.status(200).send(existingUser);
+    // res.status(200).send(existingUser);
+    const response = [
+        existingUser,
+        userJwt
+    ]
+
+    res.status(200).send(response);
 })
 
 router.post('/api/users/signout', (req, res) => {
