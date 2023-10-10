@@ -3,12 +3,15 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import axios from 'axios';
 import './Login.css';
+import Search from '@mui/icons-material/Search';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 function Login(){
     const [action, setAction] = useState('signup');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
     // const [showErrorPopup, setShowErrorPopup] = useState(false);
     const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
     const [emailForPasswordReset, setEmailForPasswordReset] = useState('');
@@ -18,10 +21,12 @@ function Login(){
             email,
             password
         }
-        axios.post('http://localhost:5000/api/users/signin', credentials)
+        axios.post('http://localhost:6000/api/users/signin', credentials)
         .then(res => {
             if (res.status === 200){
                 setIsLoggedIn(true);
+                navigate('/search');
+        
             }
             else{
                 console.log('Invalid credentials');
@@ -29,7 +34,7 @@ function Login(){
             }
         })
         .catch(error => {
-            console.error(error);
+            console.error('Axios error => ',error);
             // setShowErrorPopup(true);
         })
     }
@@ -39,7 +44,7 @@ function Login(){
     };
 
     const handlePasswordReset = () => {
-        axios.post('http://localhost:5000/api/reset-password', { email: emailForPasswordReset })
+        axios.post('http://localhost:6000/api/reset-password', { email: emailForPasswordReset })
           .then(response => {
             setShowPasswordResetModal(false);
             alert('Password reset successfully.');
@@ -58,9 +63,9 @@ function Login(){
         };
       
         // Make an API call to the backend to register the user
-        axios.post('http://localhost:5000/api/signup', credentials)
+        axios.post('http://localhost:6000/api/signup', credentials)
           .then(response => {
-            if (response.status === 200) {
+            if (response.status === 201) {
                 alert('Signup successful. You can now log in.');
             }
           })
