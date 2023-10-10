@@ -6,18 +6,14 @@ import { requireAuth } from '../../../common/src/middlewares/require-auth';
 import { validateRequest } from '../../../common/src/middlewares/validate-request';
 import { User } from '../models/users';
 import { SearchRecord } from '../models/searchRecord';
+import { Concept } from '../models/concept';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 const BING_SEARCH_URL = 'https://api.bing.microsoft.com/v7.0/search';
 const BING_SEARCH_RESULT_COUNT = 10;
 
-router.post('/api/search', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { query, tag } = req.body;
-
-    if(!query || !tag) {
-        throw new BadRequestError('Invalid query or tag');
-    }
-
+async function fetchBingAPI(query : string){
     try{
         const { data } = await axios.get(BING_SEARCH_URL, {
             headers: {
@@ -28,56 +24,163 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
                 count: BING_SEARCH_RESULT_COUNT
             }
         });
-        const user = await User.findById(req.currentUser!.id);
+        return data;
+    }catch(err){
+        throw new Error('Error querying Bing API');
+    }
+}
 
+// use bing api to search for query
+router.post('/api/search', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const { query, tag, concept } = req.body;
+
+    if(!query || !tag) {
+        throw new BadRequestError('Invalid query or tag');
+    }
+
+    if(concept){
+        const choosenConcept = await Concept.findOne({ _id: concept });
+        if(!choosenConcept || !choosenConcept.status || choosenConcept.userId !== req.currentUser!.id){
+            throw new BadRequestError('Invalid concept');
+        }
+    }
+
+    let data = await fetchBingAPI(query);
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try{
+        const user = await User.findById(req.currentUser!.id);
         const searchHistory = await SearchHistory.build({
             userId: req.currentUser!.id,
+            searchKeyword: query,
             tag: tag,
+            concept: concept,
             searchRecordIds: []
         });
-        await searchHistory.save();
-        
+            
         user!.searchHistoryIds.push(searchHistory.id);
-        await user!.save();
-
+    
         let searchResult = [];
-
+    
         for(let i = 0; i < data.webPages.value.length; i++){
             const searchRecord = await SearchRecord.build({
                 searchHistoryId: searchHistory.id,
                 title: data.webPages.value[i].name,
                 url: data.webPages.value[i].url,
-                isRelevant: false,
-                tag: tag
+                isRelevant: 0,
+                tag: tag,
+                relevantContent: ''
             });
-            await searchRecord.save();
+            await searchRecord.save({ session });
             searchHistory.searchRecordIds.push(searchRecord.id);
-            await searchHistory.save();
             searchResult.push(searchRecord);
         }
-        
+    
+        await searchHistory.save({ session });
+        await user!.save({ session });
+
+        await session.commitTransaction();
+            
         res.status(200).send(searchResult);
-    }catch(err){
-        res.status(500).send('Error querying Bing API');
+    } catch(err){
+        await session.abortTransaction();
+        res.status(500).send('Error saving search history');
+    } finally{
+        await session.endSession();
     }
 })
 
-router.post('/api/search/changeRelevant', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { searchRecordId } = req.body;
+// get all search history for a user
+router.get('/api/search/getAllSearchHistory', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const searchHistory = await SearchHistory.find({
+        userId: req.currentUser!.id
+    });
 
-    if(!searchRecordId) {
-        throw new BadRequestError('Invalid searchRecordId');
-    }
-
-    const searchRecord = await SearchRecord.findById(searchRecordId);
-    if(!searchRecord){
-        throw new BadRequestError('Invalid searchRecordId');
-    }
-
-    searchRecord.isRelevant = !searchRecord.isRelevant;
-    await searchRecord.save();
-
-    res.status(200).send(searchRecord);
+    res.status(200).send(searchHistory);
 })
+
+// show a specific search history for a user
+router.get('/api/search/getSearchHistoryDetail', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const { searchHistoryId } = req.body;
+
+    if(!searchHistoryId) {
+        throw new BadRequestError('Invalid search history id');
+    }
+
+    const searchHistory = await SearchHistory.findById(searchHistoryId);
+    if(!searchHistory || searchHistory.userId !== req.currentUser!.id){
+        throw new BadRequestError('Invalid search history id');
+    }
+
+    const searchRecords = await SearchRecord.find({
+        _id: {
+            $in: searchHistory.searchRecordIds
+        }
+    });
+
+    res.status(200).send(searchRecords);
+})
+
+// save search history for a user
+// allow to change isRelevant, relevantContent and tag
+router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const { searchRecords } = req.body;
+
+    if(!searchRecords || !Array.isArray(searchRecords)) {
+        throw new BadRequestError('Invalid search history');
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try{
+        for(let i = 0; i < searchRecords.length; i++){
+            const searchRecord = await SearchRecord.findById(searchRecords[i].id);
+            if(!searchRecord){
+                throw new Error('No search record found');
+            }
+            searchRecord.isRelevant = searchRecords[i].isRelevant;
+            searchRecord.tag = searchRecords[i].tag;
+            searchRecord.relevantContent = searchRecords[i].relevantContent;
+            await searchRecord.save({ session });
+        }
+        await session.commitTransaction();
+
+        res.status(200).send('Search records saved');
+    } catch(err){
+        await session.abortTransaction();
+        res.status(500).send('Error saving search history');
+    } finally{
+        await session.endSession();
+    }
+})
+
+// submit a search history for a user
+router.post('/api/search/submitSearchHistory', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const { searchHistoryId } = req.body;
+
+    if(!searchHistoryId) {
+        throw new BadRequestError('Invalid search history id');
+    }
+
+    const searchHistory = await SearchHistory.findById(searchHistoryId);
+    if(!searchHistory || searchHistory.userId !== req.currentUser!.id){
+        throw new BadRequestError('Invalid search history id');
+    }
+
+    if(searchHistory.concept){
+        const concept = await Concept.findOne({ _id: searchHistory.concept });
+        if(!concept || !concept.status || concept.userId !== req.currentUser!.id){
+            return res.status(500).send('Search history submit failed, this concept not be selected by the user');
+        }
+    }
+
+    searchHistory.submitted = true;
+    await searchHistory.save();
+
+    res.status(200).send('Search history submitted');
+})
+
 
 export { router as searchRouter };

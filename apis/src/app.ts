@@ -7,6 +7,7 @@ import { NotFoundError } from '../../common/src/errors/not-found-error';
 import { errorHandler } from '../../common/src/middlewares/error-handler';
 import { searchRouter } from './routes/searchRoutes'
 import { currentUser } from '../../common/src/middlewares/current-user';
+import { conceptRouter } from './routes/conceptRoutes'
 
 const app = express()
 app.set('trust proxy', true) // https
@@ -19,6 +20,7 @@ app.use(cookieSession({
 app.use(currentUser)
 app.use(userRouter)
 app.use(searchRouter)
+app.use(conceptRouter)
 
 app.all('*', async (req, res) => { 
     throw new NotFoundError()

@@ -67,29 +67,3 @@ it('change relevant failed due to invalid search record id', async() => {
     .expect(400)
     expect(response2.body.errors[0].message).toBe('Invalid searchRecordId');
 })
-
-it('change relevant successfully', async() => {
-    const tag = 'GPT'
-    const user = await global.signin()
-
-    const response = await request(app)
-    .post('/api/search')
-    .set('Cookie', user)
-    .send({
-        'query': 'cellphone',
-        'tag': tag
-    })
-    .expect(200)
-
-    const searchRecord = response.body[0];
-    const searchRecordIsRelevant = searchRecord.isRelevant;
-    await request(app)
-    .post('/api/search/changeRelevant')
-    .set('Cookie', user)
-    .send({
-        searchRecordId: searchRecord.id
-    })
-    .expect(200)
-    const changedSearchRecord = await SearchRecord.findById(searchRecord.id)
-    expect(searchRecordIsRelevant).toEqual(!changedSearchRecord)
-})
