@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-interface SearchHistoryAttrs {
+export interface SearchHistoryAttrs {
   userId: string;
   searchKeyword: string;
   tag: string;

@@ -14,7 +14,7 @@ app.set('trust proxy', true) // https
 app.use(json())
 app.use(cookieSession({
     signed: false,
-    secure: process.env.NODE_ENV !== 'test' // need https request (test env: false -> http)
+    // secure: process.env.NODE_ENV !== 'test' // need https request (test env: false -> http)
 }))
 
 app.use(currentUser)

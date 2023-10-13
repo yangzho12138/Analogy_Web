@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-interface SearchRecordAttrs {
+export interface SearchRecordAttrs {
   searchHistoryId: string;
   tag: string; // Bing / GPT
   isRelevant: number; // 
