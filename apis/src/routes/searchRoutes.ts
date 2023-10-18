@@ -194,6 +194,12 @@ router.post('/api/search/submitSearchHistory', requireAuth, validateRequest, asy
     session.startTransaction();
 
     try{
+        const concept = await Concept.findOne({ _id: conceptId });
+        if(!concept || !concept.status || concept.userId !== req.currentUser!.id || concept.submitted){
+            throw new Error('Search history submit failed, this concept not be selected by the user or already be submitted');
+        }
+        concept.submitted = true;
+        await concept.save({ session });
         const tags = new Set();
         const searchHistoryIds = await SearchHistory.find({
             concept: conceptId,
@@ -205,12 +211,12 @@ router.post('/api/search/submitSearchHistory', requireAuth, validateRequest, asy
             if(!searchHistory || searchHistory.userId !== req.currentUser!.id || searchHistory.submitted){
                 throw new Error('Search history submit failed, some search histories is invalid or already submitted');
             }
-            if(searchHistory.concept){
-                const concept = await Concept.findOne({ _id: searchHistory.concept });
-                if(!concept || !concept.status || concept.userId !== req.currentUser!.id){
-                    throw new Error('Search history submit failed, this concept not be selected by the user');
-                }
-            }
+            // if(searchHistory.concept){
+            //     const concept = await Concept.findOne({ _id: searchHistory.concept });
+            //     if(!concept || !concept.status || concept.userId !== req.currentUser!.id){
+            //         throw new Error('Search history submit failed, this concept not be selected by the user');
+            //     }
+            // }
             // check each search record isRelevant changed
             const searchRecords = await SearchRecord.find({
                 _id: {

@@ -111,5 +111,14 @@ router.post('/api/concept/unselect', requireAuth, validateRequest, async (req: R
     }
 });
 
+// current user selected concept
+router.get('/api/concept/getSelected', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const concept = await Concept.findOne({status: true, userId: req.currentUser!.id, submitted: false});
+    if(!concept){
+        return res.status(200).send({});
+    }
+    res.status(200).send(concept);
+});
+
 export { router as conceptRouter };
 
