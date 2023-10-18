@@ -21,7 +21,7 @@ function Login(){
             email,
             password
         }
-        axios.post('http://localhost:6000/api/users/signin', credentials)
+        axios.post('/api/users/signin', credentials)
         .then(res => {
             if (res.status === 200){
                 setIsLoggedIn(true);
@@ -44,7 +44,7 @@ function Login(){
     };
 
     const handlePasswordReset = () => {
-        axios.post('http://localhost:6000/api/reset-password', { email: emailForPasswordReset })
+        axios.post('/api/reset-password', { email: emailForPasswordReset })
           .then(response => {
             setShowPasswordResetModal(false);
             alert('Password reset successfully.');
@@ -63,7 +63,7 @@ function Login(){
         };
       
         // Make an API call to the backend to register the user
-        axios.post('http://localhost:6000/api/signup', credentials)
+        axios.post('/api/signup', credentials)
           .then(response => {
             if (response.status === 201) {
                 alert('Signup successful. You can now log in.');
