@@ -1,0 +1,95 @@
+/* Search container styles */
+.search-container {
+    /* display: flex; */
+    background-color: white;
+    padding: 20px;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: 1000px;
+    min-height: 100vh;
+  }
+  
+  /* Search bar styles */
+  .search-input {
+    border-radius: 20px; /* Rounded edges */
+    border-color: black;
+    padding: 10px;
+    margin-right: 10px;
+  }
+  
+  /* Select tag styles */
+  .search-tag {
+    border-radius: 20px;
+    padding: 10px 20px;
+    background-color: white;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  
+  /* Search button styles */
+  .search-button {
+    background-color: white; /* Button color */
+    color: black; /* Button text color */
+    border-color: black;
+    border-radius: 20px; /* Rounded edges */
+    padding: 10px;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+  
+  /* Styles for search results container */
+  .search-results {
+    /* display: flex; */
+    flex-direction: column;
+    align-items: center;
+    /* margin-top: 20px; */
+    padding: 0 auto;
+    padding-left: 200px;
+    padding-right: 200px;
+    padding-top: 20px;
+    /* max-width: 800px; */
+    margin: 0 auto;
+  }
+  
+  /* Styles for search result entries */
+  .search-result {
+    background-color: white; /* Background color for each result */
+    padding: 10px;
+    margin-bottom: 5px; /* Spacing between search results */
+    border-radius: 5px; /* Rounded edges */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Box shadow for a subtle lift effect */
+    /* Add any other styles you want */
+  }
+  
+input[type="text"] {
+    width: 50%; 
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    outline: none; 
+    font-size: 16px; 
+    color: #333; 
+  }
+  
+  /* Style for text input when focused (optional) */
+  input[type="text"]:focus {
+    border-color: #007bff; 
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); 
+  }
+
+  .search-save-button {
+    border-radius: 8px; 
+    background-color: #1e6091; 
+    color: #ffffff; 
+    display: block; 
+    margin: 0 auto; 
+    padding: 10px 20px; 
+    cursor: pointer; 
+    border: none; 
+    text-align: center; 
+  }
+  
+  .search-save-button:hover {
+    background-color: #174d7a; 
+  }
+  

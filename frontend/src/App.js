@@ -1,6 +1,7 @@
-import logo from './logo.svg';
 import './App.css';
-import axios from 'axios';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import Login from './Login';
+import Search from './Search';
 
 function App() {
   const test = async() => {
@@ -12,23 +13,17 @@ function App() {
     console.log(data);
   }
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        <div onClick={test}>test</div>
-        </a>
-      </header>
-    </div>
+    // <div className="App">
+    //   <Login />
+    //   {/* <SearchComponent /> */}
+    // </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
 }
 
