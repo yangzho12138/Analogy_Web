@@ -9,6 +9,7 @@ interface ConceptDoc extends mongoose.Document {
     name: string;
     status: boolean;
     userId: string;
+    submitted: boolean;
 }
 
 interface ConceptModel extends mongoose.Model<ConceptDoc> {
@@ -30,6 +31,11 @@ const ConceptSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        submitted: {
+            type: Boolean,
+            required: true,
+            default: false,
+        }
     },
     {
         toJSON: {
