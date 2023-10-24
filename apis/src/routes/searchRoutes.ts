@@ -3,12 +3,15 @@ import { BadRequestError } from '../../../common/src/errors/bad-request-error';
 import axios from 'axios';
 import { SearchHistory } from '../models/searchHistory';
 import { SearchHistoryAttrs } from '../models/searchHistory';
+import { TestCase } from '../models/testcases';
 import { requireAuth } from '../../../common/src/middlewares/require-auth';
 import { validateRequest } from '../../../common/src/middlewares/validate-request';
 import { User } from '../models/users';
 import { SearchRecord, SearchRecordAttrs } from '../models/searchRecord';
 import { Concept } from '../models/concept';
 import mongoose from 'mongoose';
+import fs from 'fs';
+import readline from 'readline';
 
 const router = express.Router();
 const BING_SEARCH_URL = 'https://api.bing.microsoft.com/v7.0/search';
@@ -72,8 +75,7 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
                 title: data.webPages.value[i].name,
                 url: data.webPages.value[i].url,
                 isRelevant: 0,
-                tag: tag,
-                relevantContent: ''
+                tag: tag
             });
             await searchRecord.save({ session });
             searchHistory.searchRecordIds.push(searchRecord.id);
@@ -150,6 +152,7 @@ router.get('/api/search/getSearchHistoryDetail', requireAuth, validateRequest, a
 
 // save search history for a user
 // allow to change isRelevant, relevantContent and tag
+// TODO: check whether test cases are valid
 router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async (req: Request, res: Response) => {
     const { searchRecords } = req.body;
 
@@ -168,7 +171,6 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
             }
             searchRecord.isRelevant = searchRecords[i].isRelevant;
             searchRecord.tag = searchRecords[i].tag;
-            searchRecord.relevantContent = searchRecords[i].relevantContent;
             await searchRecord.save({ session });
         }
         await session.commitTransaction();
@@ -294,5 +296,76 @@ router.get('/api/search/getSearchRecordInfo', requireAuth, validateRequest, asyn
     res.status(200).send(searchRecordInfo);
 })
 
+// chunk the big data file into small chunks
+function chunkArray<T>(originalArray: T[], chunkSize: number): T[][] {
+    let chunks: T[][] = [];
+
+    let index = 0;
+
+    while (index < originalArray.length) {
+        chunks.push(originalArray.slice(index, index + chunkSize));
+        index += chunkSize;
+    }
+
+    return chunks;
+}
+
+
+// insert test cases - type1: no clear labels
+// TODO: test cases(type 2) should add label
+router.post('/api/search/insertTestCases', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const { filePath } = req.body;
+    if(!filePath) {
+        throw new BadRequestError('Invalid file path');
+    }
+    const readStream = fs.createReadStream(filePath);
+  
+    // Handle file not found
+    readStream.on('error', (err) => {
+        return res.status(404).json({ message: 'File not found' });
+    });
+
+    const reader = readline.createInterface({
+        input: readStream,
+        crlfDelay: Infinity,
+    });
+
+    const data: any[] = [];
+
+    reader.on('line', (line: string) => {
+        try {
+        const jsonLine = JSON.parse(line);
+        data.push(jsonLine);
+        } catch (err) {
+            console.error('Failed to parse JSON line:', err);
+            return res.status(500).json({ message: 'Failed to parse file line' });
+        }
+    });
+
+    reader.on('close', async () => {
+        const session = await mongoose.startSession();
+        try{
+            // file is too big, need to chunk, or the transaction session will timeout
+            const chunks = chunkArray(data, 100);
+            for(const chunk of chunks){
+                session.startTransaction();
+                for(let i = 0; i < chunk.length; i++){
+                    const testCase = await TestCase.build({
+                        url: chunk[i].url
+                    });
+                    await testCase.save({ session });
+                }
+                await session.commitTransaction();
+            }
+        } catch(err){
+            await session.abortTransaction();
+            console.error('Failed to save test cases:', err);
+            return res.status(500).json({ message: 'Error saving test cases' });
+        } finally{
+            await session.endSession();
+        }
+        return res.json(data);
+    });
+})
 
 export { router as searchRouter };
