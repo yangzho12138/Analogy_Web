@@ -15,6 +15,7 @@ interface UserDoc extends mongoose.Document {
     email: string;
     password: string;
     searchHistoryIds: string[];
+    failedAttempts: number; // users only allowed 3 attempts to save
 }
 
 const UserSchema = new mongoose.Schema({
@@ -29,6 +30,11 @@ const UserSchema = new mongoose.Schema({
     searchHistoryIds: {
         type: [String],
         required: false
+    },
+    failedAttempts: {
+        type: Number,
+        required: true,
+        default: 0
     }
 }, {
     toJSON: {
