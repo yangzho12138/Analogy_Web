@@ -6,10 +6,6 @@ import Search from './Search';
 function App() {
  
   return (
-    // <div className="App">
-    //   <Login />
-    //   {/* <SearchComponent /> */}
-    // </div>
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />

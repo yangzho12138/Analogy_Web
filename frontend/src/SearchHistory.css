@@ -3,7 +3,16 @@
   overflow-y: auto; 
   border: 1px solid #ccc; 
   border-radius: 5px;
-  width:350px; 
+  width: 350px; 
+}
+
+.concept-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; 
+  padding: 10px;
+  border: 1px solid black;
+  margin-bottom: 20px; 
 }
 
 .search-history {
