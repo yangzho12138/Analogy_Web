@@ -163,15 +163,6 @@ router.get('/api/search/getAllSearchHistory', requireAuth, validateRequest, asyn
     res.status(200).send(groupedByConceptName);
 })
 
-router.get('/api/search/getAllFailedUser', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const users = await User.find({
-        failedAttempts: {
-            $gte: 3
-        }
-    }).select('email');
-    res.status(200).send({users});
-})
-
 interface SearchHistoryDetail {
     searchRecords: SearchRecordAttrs[];
     submitted: boolean;
