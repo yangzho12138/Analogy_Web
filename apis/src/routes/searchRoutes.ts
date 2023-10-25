@@ -14,7 +14,7 @@ import fs from 'fs';
 import readline from 'readline';
 
 const router = express.Router();
-const BING_SEARCH_URL = 'https://api.bing.microsoft.com/v7.0/search';
+const BING_SEARCH_URL = 'https://urldefense.com/v3/__https://api.bing.microsoft.com/v7.0/search__;!!DZ3fjg!4uGomE_hQq4_pxEy5nd-WeDKTk3Cnxt2-C7SPSyzzZnyVH-BLMe-aEoHn8QEpzCIeYwoWLPsyHdlsSYG17IaSyqkeg$ ';
 const BING_SEARCH_RESULT_COUNT = 10;
 
 const TAG_TYPE_NUMBER = 3;
@@ -72,11 +72,55 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
         for(let i = 0; i < data.webPages.value.length; i++){
             const searchRecord = await SearchRecord.build({
                 searchHistoryId: searchHistory.id,
-                title: data.webPages.value[i].name,
                 url: data.webPages.value[i].url,
                 isRelevant: 0,
                 tag: tag
             });
+            await searchRecord.save({ session });
+            searchHistory.searchRecordIds.push(searchRecord.id);
+            searchResult.push(searchRecord);
+        }
+
+        // TODO: inject test cases
+        // randomly choose 2 test cases (type1: no clear labels)
+        for(let i = 0; i < 2; i++){
+            const testCases = await TestCase.find({
+                userIds: {
+                    $nin: req.currentUser!.id
+                },
+                labeled: false
+            });
+            if(testCases.length === 0){
+                break;
+            }
+            const randomTestCase = testCases[Math.floor(Math.random() * testCases.length)];
+            const searchRecord = await SearchRecord.build({
+                searchHistoryId: searchHistory.id,
+                url: randomTestCase.url,
+                isRelevant: 0,
+                tag: tag
+            });
+            await searchRecord.save({ session });
+            searchHistory.searchRecordIds.push(searchRecord.id);
+            searchResult.push(searchRecord);
+        }
+        // randomly choose 1 test case (type2: with clear labels)
+        const testCases = await TestCase.find({
+            userIds: {
+                $nin: req.currentUser!.id
+            },
+            labeled: true
+        });
+        if(testCases.length !== 0){
+            const randomTestCase = testCases[Math.floor(Math.random() * testCases.length)];
+            const searchRecord = await SearchRecord.build({
+                searchHistoryId: searchHistory.id,
+                url: randomTestCase.url,
+                isRelevant: 0,
+                tag: tag
+            });
+            searchRecord.isPreSet = true;
+            searchRecord.preSetVal = randomTestCase.label;
             await searchRecord.save({ session });
             searchHistory.searchRecordIds.push(searchRecord.id);
             searchResult.push(searchRecord);
@@ -117,6 +161,15 @@ router.get('/api/search/getAllSearchHistory', requireAuth, validateRequest, asyn
     }
 
     res.status(200).send(groupedByConceptName);
+})
+
+router.get('/api/search/getAllFailedUser', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const users = await User.find({
+        failedAttempts: {
+            $gte: 3
+        }
+    }).select('email');
+    res.status(200).send({users});
 })
 
 interface SearchHistoryDetail {
@@ -169,6 +222,17 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
             if(!searchRecord){
                 throw new Error('No search record found');
             }
+            // check all search records are finished and the test cases is finished correctly
+            if(searchRecord.isPreSet && (searchRecord.preSetVal === true && searchRecords[i].isRelevant === 2 || searchRecord.preSetVal === false && searchRecords[i].isRelevant !== 2) || searchRecords[i].isRelevant === 0){
+                const user = await User.findById(req.currentUser!.id);
+                user!.failedAttempts++;
+                if(user!.failedAttempts >= 3){
+                    throw new Error('You wasted all attempts, please contact the TA');
+                }else{
+                    await user!.save();
+                    throw new Error('Please make sure you finished all parts carefully, you have ' + (3 - user!.failedAttempts) + ' attempts left');
+                }
+            }
             searchRecord.isRelevant = searchRecords[i].isRelevant;
             searchRecord.tag = searchRecords[i].tag;
             await searchRecord.save({ session });
@@ -178,7 +242,11 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
         res.status(200).send('Search records saved');
     } catch(err){
         await session.abortTransaction();
-        res.status(500).send('Error saving search history');
+        if (err instanceof Error) {
+            res.status(500).send(err.message);
+        } else {
+            res.status(500).send('An unexpected error occurred');
+        }
     } finally{
         await session.endSession();
     }
@@ -220,16 +288,16 @@ router.post('/api/search/submitSearchHistory', requireAuth, validateRequest, asy
             //     }
             // }
             // check each search record isRelevant changed
-            const searchRecords = await SearchRecord.find({
-                _id: {
-                    $in: searchHistory.searchRecordIds
-                }
-            });
-            for(let j = 0; j < searchRecords.length; j++){
-                if(searchRecords[j].isRelevant === 0){
-                    throw new Error('Search history submit failed, please make sure you have marked all search records');
-                }
-            }
+            // const searchRecords = await SearchRecord.find({
+            //     _id: {
+            //         $in: searchHistory.searchRecordIds
+            //     }
+            // });
+            // for(let j = 0; j < searchRecords.length; j++){
+            //     if(searchRecords[j].isRelevant === 0){
+            //         throw new Error('Search history submit failed, please make sure you have marked all search records');
+            //     }
+            // }
             // check there are 3 types of tags
             tags.add(searchHistory.tag);
             searchHistory.submitted = true;
@@ -278,7 +346,6 @@ router.get('/api/search/getSearchRecordInfo', requireAuth, validateRequest, asyn
     searchRecordInfo.id = searchRecord.id;
     searchRecordInfo.isRelevant = searchRecord.isRelevant;
     searchRecordInfo.tag = searchRecord.tag;
-    searchRecordInfo.title = searchRecord.title;
     searchRecordInfo.url = searchRecord.url;
 
     const searchHistory = await SearchHistory.findById(searchRecord.searchHistoryId);
@@ -311,11 +378,10 @@ function chunkArray<T>(originalArray: T[], chunkSize: number): T[][] {
 }
 
 
-// insert test cases - type1: no clear labels
-// TODO: test cases(type 2) should add label
+// insert test cases - type1: no clear labels / type2: with clear labels
 router.post('/api/search/insertTestCases', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { filePath } = req.body;
-    if(!filePath) {
+    const { filePath, type } = req.body;
+    if(!filePath || !type) {
         throw new BadRequestError('Invalid file path');
     }
     const readStream = fs.createReadStream(filePath);
@@ -353,6 +419,10 @@ router.post('/api/search/insertTestCases', requireAuth, validateRequest, async (
                     const testCase = await TestCase.build({
                         url: chunk[i].url
                     });
+                    if(type === '2'){
+                        testCase.labeled = true;
+                        testCase.label = chunk[i].label;
+                    }
                     await testCase.save({ session });
                 }
                 await session.commitTransaction();
