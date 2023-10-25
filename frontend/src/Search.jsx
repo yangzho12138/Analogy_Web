@@ -3,6 +3,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import axios from 'axios';
 import './Search.css';
 import { Button, Badge, Form } from 'react-bootstrap';
+import SearchHistory from './SearchHistory';
 // test123@illinois.edu
 // test123
 function Search() {
@@ -49,7 +50,10 @@ function Search() {
             axios.post('/api/search', { "query":query, "tag":selectedTag, "concept":selectedConceptId })
             .then(response => {
                 if (response.status === 200) {
-                    setSearchResults(response.data);
+                    console.log('Search response => ',response.data);
+                    setSearchResults(response.data.map(result => ({ title: result.title, url: result.url, id: result.id, searchHistoryId: result.searchHistoryId, isRelevant: result.isRelevant, tag: result.tag})));
+                    const initialRelevanceData = Array(response.data.length).fill(0);
+                    setRelevanceData(initialRelevanceData);
                 }
             }
             )
@@ -58,27 +62,7 @@ function Search() {
                 alert('Search failed.');
             }
             );
-
-
-        const dummySearchResults = [
-            { id: 1, title: 'Result 1' },
-            { id: 2, title: 'Result 2' },
-            { id: 3, title: 'Result 3' },
-            { id: 4, title: 'Result 4' },
-            { id: 5, title: 'Result 5' },
-            { id: 6, title: 'Result 6' },
-            { id: 7, title: 'Result 7' },
-            { id: 8, title: 'Result 8' },
-            { id: 9, title: 'Result 9' },
-            { id: 10, title: 'Result 10' },
-          ];
-
-        
-        setSearchResults(dummySearchResults);
-        const initialRelevanceData = Array(dummySearchResults.length).fill('');
-        setRelevanceData(initialRelevanceData);
         }
-
     };
 
     const handleChooseConcept =  () => {
@@ -126,10 +110,14 @@ function Search() {
     const handleSave = () => {
     const searchData = searchResults.map((result, index) => ({
         title: result.title,
-        isRelevant: relevanceData[index],
+        url: result.url,
+        id: result.id,
+        searchHistoryId: result.searchHistoryId,
+        tag: result.tag,
+        isRelevant: relevanceData[index]
     }));
-
-    axios.post('/api/search/saveSearchHistory', searchData, {
+    console.log('searchData => ',searchData,"type => ",typeof(searchData));
+    axios.post('/api/search/saveSearchHistory', {searchRecords:searchData} , {
         headers: {
         'Content-Type': 'application/json',
         },
@@ -171,12 +159,12 @@ function Search() {
         }
     }, [selectedConceptId, concept]);
 
-    // useEffect(() => {
-    //     getAllConcepts();
-    // }, []);
-
     return (
+        
         <div className='search-container'>
+            <div className='search-history-container'>
+                <SearchHistory />
+            </div>
             {!concept && (
                 <Form>
                 <Form.Group>
@@ -188,7 +176,6 @@ function Search() {
                         console.log('concept => ',e.target.options[e.target.selectedIndex].text);
                         // handleChooseConcept(e);
                     }}>
-                    {/* <Form.Control as="select" value={concept} onChange={e => handleChooseConcept(e)}> */}
                         <option value={0} >Select concept</option>
                         {conceptList.map(item => (
                             <option key={item.id} value={item.id}>
@@ -199,7 +186,7 @@ function Search() {
                 </Form.Group>
             </Form>
             )}
-
+    
             {concept && selectedConceptId !== null && (
                 <>
                     <Badge pill variant="primary">
@@ -207,14 +194,14 @@ function Search() {
                         <Button
                             variant="light"
                             size="sm"
-                            onClick={(handleUnselectConcept)} 
+                            onClick={handleUnselectConcept}
                         >
                             x
                         </Button>
                     </Badge>
                 </>
             )}
-
+    
             {concept && (
                 <>
                 <div className='search-bar'>
@@ -230,46 +217,51 @@ function Search() {
                     < SearchIcon />
                 </button>
             </div>
-
-                    {searchResults.map((result, index) => (
-                        <div key={result.id} className='search-result'>
-                            {result.title}
-                            <div className='radio-buttons'>
-                                <input
-                                type='radio'
-                                name={`result${index}`}
-                                value='relevant'
-                                checked={relevanceData[index] === 'relevant'}
-                                onClick={() => handleRelevanceChange(index, relevanceData[index]==='relevant'?'':'relevant')}
-                                />
-                                Relevant
-                                <input
-                                type='radio'
-                                name={`result${index}`}
-                                value='non-relevant'
-                                checked={relevanceData[index] === 'non-relevant'}
-                                onClick={() => handleRelevanceChange(index, relevanceData[index]==='non-relevant'?'':'non-relevant')}
-                                />
-                                Non-Relevant
-                                <input
-                                type='radio'
-                                name={`result${index}`}
-                                value='other'
-                                checked={relevanceData[index] === 'other'}
-                                onClick={() => handleRelevanceChange(index, relevanceData[index]==='other'?'':'other')}
-                                />
-                                Other
-                            </div>
+            <div className='search-results'>
+                {searchResults.map((result, index) => (
+                    <div key={result.id} className='search-result'>
+                        <div>{result.title}</div>
+                        <a href={result.url} target="_blank" rel="noopener noreferrer">
+                            {result.url}
+                        </a>
+                          <div className='radio-buttons'>
+                            <input
+                            type='radio'
+                            name={`result${index}`}
+                            value={1}
+                            checked={relevanceData[index] === 1}
+                            onClick={() => handleRelevanceChange(index, relevanceData[index]===1?0:1)}
+                            />
+                            Relevant
+                            <input
+                            type='radio'
+                            name={`result${index}`}
+                            value={2}
+                            checked={relevanceData[index] === 2}
+                            onClick={() => handleRelevanceChange(index, relevanceData[index]===2?0:2)}
+                            />
+                            Non-Relevant
+                            <input
+                            type='radio'
+                            name={`result${index}`}
+                            value={3}
+                            checked={relevanceData[index] === 3}
+                            onClick={() => handleRelevanceChange(index, relevanceData[index]===3?0:3)}
+                            />
+                            Other
                         </div>
-                    ))}
+                    </div>
+                ))}
+            </div>
             {searchResults.length>0 && (
                 <button className='search-save-button' onClick={handleSave}>
                     Save
                 </button>)}
-        </>
+</>
             )}
-            </div>
+        </div>
     );
+    
 }
 
 export default Search;

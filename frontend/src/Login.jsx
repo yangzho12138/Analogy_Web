@@ -58,8 +58,8 @@ function Login(){
     const handleSignup = () => {
         
         const credentials = {
-          email,
-          password
+          email:email,
+          password:password
         };
       
         // Make an API call to the backend to register the user

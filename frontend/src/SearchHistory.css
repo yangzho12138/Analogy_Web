@@ -1,0 +1,52 @@
+.search-history-container {
+  height: 600px; 
+  overflow-y: auto; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+  width:350px; 
+}
+
+.search-history {
+    border: 1px solid black; 
+    padding: 10px; 
+  }
+  
+  .search-history-concept-row {
+    border: 1px solid gray; 
+    padding: 10px; 
+    margin: 10px 0; 
+  }
+  
+  .search-history-concept {
+    color: white; 
+    background-color: orange; 
+    border-radius: 10px; 
+    padding: 5px 10px; 
+    display: inline-block; 
+  }
+  
+  .search-history-search-keyword {
+    background-color: lightgray; 
+    padding: 5px 10px; 
+    display: inline-block; 
+  }
+  
+  .search-history-submit-button {
+    display: block;
+    text-align: center;
+    width: 50px;
+    height: 25px;
+    color: #fff;
+    background-color: #1e6091; 
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 300;
+    cursor: pointer;
+    margin: 10px 0; 
+    
+  }
+  
+  .search-history-submit-button:hover {
+    background-color: #3a008f;
+  }
+  

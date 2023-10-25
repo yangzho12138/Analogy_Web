@@ -4,14 +4,7 @@ import Login from './Login';
 import Search from './Search';
 
 function App() {
-  const test = async() => {
-    console.log('test');
-    const {data} = await axios.post('/api/users/signout', {
-      'email': 'yz@illinois.edu',
-      'password': '123456'
-    });
-    console.log(data);
-  }
+ 
   return (
     // <div className="App">
     //   <Login />
