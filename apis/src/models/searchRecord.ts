@@ -4,7 +4,6 @@ export interface SearchRecordAttrs {
   searchHistoryId: string;
   tag: string;
   isRelevant: number;
-  title: string;
   url: string;
 }
 
@@ -16,9 +15,9 @@ interface SearchRecordDoc extends mongoose.Document {
   searchHistoryId: string;
   tag: string;
   isRelevant: number;
-  title: string;
   url: string;
   isPreSet: boolean;
+  preSetVal: boolean; // postive or negative
 }
 
 const SearchRecordSchema = new mongoose.Schema(
@@ -36,10 +35,6 @@ const SearchRecordSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
-    title: {
-      type: String,
-      required: true,
-    },
     url: {
       type: String,
       required: true,
@@ -48,6 +43,10 @@ const SearchRecordSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
       default: false,
+    },
+    preSetVal: {
+      type: Boolean,
+      required: false,
     },
   },
   {

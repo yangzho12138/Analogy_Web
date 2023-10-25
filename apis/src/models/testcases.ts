@@ -10,7 +10,9 @@ interface TestCaseModel extends mongoose.Model<TestCaseDoc> {
 
 interface TestCaseDoc extends mongoose.Document {
     url: string;
-    label: string; // for test cases given the related tag
+    labeled: boolean;
+    label: boolean; // for test cases given the related tag
+    userIds: string[]; // users already tested this test case
 }
 
 const TestCaseSchema = new mongoose.Schema({
@@ -18,10 +20,20 @@ const TestCaseSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    labeled: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     label: {
-        type: String,
+        type: Boolean,
         required: false,
-        default: ""
+        default: false
+    },
+    userIds: {
+        type: [String],
+        required: false,
+        default: []
     }
 }, {
     toJSON: {
