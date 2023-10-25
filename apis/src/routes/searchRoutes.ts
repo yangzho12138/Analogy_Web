@@ -163,6 +163,15 @@ router.get('/api/search/getAllSearchHistory', requireAuth, validateRequest, asyn
     res.status(200).send(groupedByConceptName);
 })
 
+router.get('/api/search/getAllFailedUser', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const users = await User.find({
+        failedAttempts: {
+            $gte: 3
+        }
+    }).select('email');
+    res.status(200).send({users});
+})
+
 interface SearchHistoryDetail {
     searchRecords: SearchRecordAttrs[];
     submitted: boolean;
@@ -214,7 +223,7 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
                 throw new Error('No search record found');
             }
             // check all search records are finished and the test cases is finished correctly
-            if(searchRecord.isPreSet && searchRecord.preSetVal !== searchRecords[i].isRelevant || searchRecords[i].isRelevant === 0){
+            if(searchRecord.isPreSet && (searchRecord.preSetVal === true && searchRecords[i].isRelevant === 2 || searchRecord.preSetVal === false && searchRecords[i].isRelevant !== 2) || searchRecords[i].isRelevant === 0){
                 const user = await User.findById(req.currentUser!.id);
                 user!.failedAttempts++;
                 if(user!.failedAttempts >= 3){
