@@ -1,7 +1,5 @@
 import express, { Request, Response } from 'express'
-import { BadRequestError } from '../../../common/src/errors/bad-request-error';
-import { requireAuth } from '../../../common/src/middlewares/require-auth';
-import { validateRequest } from '../../../common/src/middlewares/validate-request';
+import { requireAuth, validateRequest, BadRequestError } from '@ticket_hub/common';
 import mongoose from 'mongoose';
 import { Concept } from '../models/concept';
 import { SearchHistory } from '../models/searchHistory';
