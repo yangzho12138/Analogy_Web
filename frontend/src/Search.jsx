@@ -151,6 +151,25 @@ function Search() {
             console.error('Axios error => ',error);
         })
     }
+
+    const handleSearchRecordSelection = (selectedRecordId) => {
+        console.log('selectedRecord => ',selectedRecordId);
+      
+        axios.get('/api/search/getSearchHistoryDetail?id='+selectedRecordId)
+        .then(response => {
+            if (response.status === 200) {
+            console.log(response.data);
+            }
+
+        })
+        .catch(error => {
+            console.error('SearchHistoryDetail error:', error);
+            alert('SearchHistoryDetail fetch failed.');
+        })
+        // setSearchResults(selectedRecord.searchResults);
+        // setRelevanceData(selectedRecord.relevanceData);
+      };
+      
     
     useEffect(() => {
         if (selectedConceptId && concept) {
@@ -163,7 +182,7 @@ function Search() {
         
         <div className='search-container'>
             <div className='search-history-container'>
-                <SearchHistory />
+                <SearchHistory onSearchRecordSelect={handleSearchRecordSelection} />
             </div>
             {!concept && (
                 <Form>
@@ -174,7 +193,6 @@ function Search() {
                         setConcept(e.target.options[e.target.selectedIndex].text);
                         console.log('selectedConceptId => ',e.target.options[e.target.selectedIndex].value);
                         console.log('concept => ',e.target.options[e.target.selectedIndex].text);
-                        // handleChooseConcept(e);
                     }}>
                         <option value={0} >Select concept</option>
                         {conceptList.map(item => (
