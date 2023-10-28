@@ -1,11 +1,9 @@
 import express, { Request, Response } from 'express'
-import { BadRequestError } from '../../../common/src/errors/bad-request-error';
 import axios from 'axios';
 import { SearchHistory } from '../models/searchHistory';
 import { SearchHistoryAttrs } from '../models/searchHistory';
 import { TestCase } from '../models/testcases';
-import { requireAuth } from '../../../common/src/middlewares/require-auth';
-import { validateRequest } from '../../../common/src/middlewares/validate-request';
+import { requireAuth, validateRequest, BadRequestError } from '@ticket_hub/common';
 import { User } from '../models/users';
 import { SearchRecord, SearchRecordAttrs } from '../models/searchRecord';
 import { Concept } from '../models/concept';
@@ -36,12 +34,31 @@ async function fetchBingAPI(query : string){
     }
 }
 
+function shuffleArray<T>(array: T[]): T[] {
+    // Clone the original array to avoid altering it. Remove this line if mutation is acceptable.
+    let newArray = array.slice(); 
+
+    for (let i = newArray.length - 1; i > 0; i--) {
+        // Generate a random index from 0 to i
+        let j = Math.floor(Math.random() * (i + 1));
+
+        // Swap elements at indices i and j
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+
+    return newArray;
+}
+
 // use bing api to search for query
 router.post('/api/search', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { query, tag, concept } = req.body;
+    const { query, tag, concept, link } = req.body;
 
     if(!query || !tag) {
         throw new BadRequestError('Invalid query or tag');
+    }
+
+    if(tag !== 'Self-generated' && !link){
+        throw new BadRequestError('You must enter the gpt link for non self-generated query');
     }
 
     if(concept){
@@ -64,6 +81,10 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
             concept: concept,
             searchRecordIds: []
         });
+
+        if(tag !== 'Self-generated'){
+            searchHistory.link = link;
+        }
             
         user!.searchHistoryIds.push(searchHistory.id);
     
@@ -130,6 +151,8 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
         await user!.save({ session });
 
         await session.commitTransaction();
+
+        searchResult = shuffleArray(searchResult);
             
         res.status(200).send(searchResult);
     } catch(err){
@@ -170,8 +193,8 @@ interface SearchHistoryDetail {
 
 // show a specific search history for a user
 router.get('/api/search/getSearchHistoryDetail', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { searchHistoryId } = req.body;
-
+    const searchHistoryId = req.query.id;
+    
     if(!searchHistoryId) {
         throw new BadRequestError('Invalid search history id');
     }

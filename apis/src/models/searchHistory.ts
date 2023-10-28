@@ -19,6 +19,7 @@ interface SearchHistoryDoc extends mongoose.Document {
   concept: string;
   searchRecordIds: string[];
   submitted: boolean;
+  link: string;
 }
 
 const SearchHistorySchema = new mongoose.Schema(
@@ -47,6 +48,10 @@ const SearchHistorySchema = new mongoose.Schema(
       type: Boolean,
       required: true,
       default: false,
+    },
+    link: {
+      type: String,
+      required: false,
     },
   },
   {

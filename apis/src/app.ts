@@ -3,12 +3,10 @@ import { json } from 'body-parser'
 import 'express-async-errors'
 import cookieSession from 'cookie-session'
 import { userRouter } from './routes/userRoutes'
-import { NotFoundError } from '../../common/src/errors/not-found-error';
-import { errorHandler } from '../../common/src/middlewares/error-handler';
 import { searchRouter } from './routes/searchRoutes'
-import { currentUser } from '../../common/src/middlewares/current-user';
 import { conceptRouter } from './routes/conceptRoutes'
 import { adminRouter } from './routes/adminRoutes'
+import { currentUser, NotFoundError, errorHandler } from '@ticket_hub/common';
 
 const app = express()
 app.set('trust proxy', true) // https

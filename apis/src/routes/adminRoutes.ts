@@ -1,8 +1,5 @@
 import express, { Request, Response } from 'express'
-import { BadRequestError } from '../../../common/src/errors/bad-request-error';
-import { requireAuth } from '../../../common/src/middlewares/require-auth';
-import { validateRequest } from '../../../common/src/middlewares/validate-request';
-import mongoose from 'mongoose';
+import { requireAuth, validateRequest, BadRequestError } from '@ticket_hub/common';
 import { User } from '../models/users';
 
 const router = express.Router();
