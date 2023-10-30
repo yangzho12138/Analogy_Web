@@ -16,7 +16,6 @@ function Search() {
     const [concept, setConcept] = useState('');
     const tagOptions = ['Select tag','Self-generated', 'Chat-GPT query', 'Chat-GPT analogy','Other'];
     const [selectedConceptId, setSelectedConceptId] = useState('');
-    const [searchHistories, setSearchHistories] = useState([]);
 
     // item
     // {
@@ -51,7 +50,8 @@ function Search() {
             .then(response => {
                 if (response.status === 200) {
                     console.log('Search response => ',response.data);
-                    setSearchResults(response.data.map(result => ({ title: result.title, url: result.url, id: result.id, searchHistoryId: result.searchHistoryId, isRelevant: result.isRelevant, tag: result.tag})));
+                    setSearchResults(response.data.map(result => ({ url: result.url, id: result.id, searchHistoryId: result.searchHistoryId, isRelevant: result.isRelevant, tag: result.tag})));
+                    console.log('handleSearch searchResults => ',searchResults);
                     const initialRelevanceData = Array(response.data.length).fill(0);
                     setRelevanceData(initialRelevanceData);
                 }
@@ -131,26 +131,9 @@ function Search() {
         })
         .catch((error) => {
         console.error('Error:', error);
-        alert('An error occurred while saving data.');
+        alert(error.response.data);
         });
     };
-    
-    const getAllSearchHistories = () => {
-        axios.get('/api/search/getAllSearchHistory')
-        .then(res => {
-            if (res.status === 200){
-                console.log('getAllSearchHistories() => ',res.data);
-                setSearchHistories(res.data);
-            }
-            else{
-                console.log('Invalid credentials');
-            }
-        }
-        )
-        .catch(error => {
-            console.error('Axios error => ',error);
-        })
-    }
 
     const handleSearchRecordSelection = (selectedRecordId) => {
         console.log('selectedRecord => ',selectedRecordId);
@@ -158,7 +141,11 @@ function Search() {
         axios.get('/api/search/getSearchHistoryDetail?id='+selectedRecordId)
         .then(response => {
             if (response.status === 200) {
-            console.log(response.data);
+            console.log('search history detail',response.data);
+            setSearchResults(response.data.searchRecords.map(result => ({ url: result.url, id: result.id, searchHistoryId: result.searchHistoryId, isRelevant: result.isRelevant, tag: result.tag})));
+            console.log('searchResults => ',searchResults);
+            const selectedRelevanceData = response.data.searchRecords.map(result => result.isRelevant);
+            setRelevanceData(selectedRelevanceData);
             }
 
         })
@@ -177,6 +164,11 @@ function Search() {
             console.log(selectedConceptId,'-', concept)
         }
     }, [selectedConceptId, concept]);
+
+    useEffect(() => {
+        console.log('searchResults => ', searchResults);
+      }, [searchResults]);
+      
 
     return (
         
@@ -235,10 +227,12 @@ function Search() {
                     < SearchIcon />
                 </button>
             </div>
+            
+</>
+            )}
             <div className='search-results'>
                 {searchResults.map((result, index) => (
                     <div key={result.id} className='search-result'>
-                        <div>{result.title}</div>
                         <a href={result.url} target="_blank" rel="noopener noreferrer">
                             {result.url}
                         </a>
@@ -275,8 +269,6 @@ function Search() {
                 <button className='search-save-button' onClick={handleSave}>
                     Save
                 </button>)}
-</>
-            )}
         </div>
     );
     

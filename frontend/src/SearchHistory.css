@@ -34,6 +34,14 @@
     display: inline-block; 
   }
   
+  .search-history-custom-badge-class{
+    display: block;
+    background-color: rgb(68, 167, 68);
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    border-radius: 5px;
+  }
   .search-history-search-keyword {
     background-color: lightgray; 
     padding: 5px 10px; 

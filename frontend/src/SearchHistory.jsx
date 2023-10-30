@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './SearchHistory.css';
+import Badge from 'react-bootstrap/Badge';
+
 
 function SearchHistory({onSearchRecordSelect}) {
     const [searchHistory, setSearchHistory] = useState([]);
@@ -59,19 +61,21 @@ function SearchHistory({onSearchRecordSelect}) {
                         <div className="submit-button-section">
                             {searchHistory[concept].map(conceptData => (
                                 <div key={conceptData.id} className="search-history-concept-row">
-                                    {/* <div className="search-history-search-keyword">{conceptData.searchKeyword}</div> */}
+                                    <span className="search-history-custom-badge-class">{conceptData.tag}</span>
+                                    <br/>
                                     <button
                                         key={conceptData.id}
                                         className="search-history-search-keyword"
-                                        onClick={() => onSearchRecordSelect(searchHistory[concept][0].id)}
+                                        onClick={() => onSearchRecordSelect(conceptData.id)}
                                     >
                                         {conceptData.searchKeyword}
                                     </button>
+                                    
                                 </div>
                             ))}
                             <button
                                 className='search-history-submit-button'
-                                onClick={() => handleSubmission(searchHistory[concept][0].concept)} // Use the ID of the first record
+                                onClick={() => handleSubmission(searchHistory[concept][0].concept)} 
                                 disabled={searchHistory[concept][0].submitted}
                             >
                                 {searchHistory[concept][0].submitted ? 'Submitted' : 'Submit'}
@@ -85,22 +89,4 @@ function SearchHistory({onSearchRecordSelect}) {
     );
 }
 
-// Call http://localhost:6000/api/search/getSearchHistoryDetail for every record in the search panel under a particular concept
-// Provide the id to the id in the below object
-// {
-//     "userId": "653056d0ed8f4dd88f27bf8d",
-//     "searchKeyword": "history",
-//     "tag": "Self-generated",
-//     "concept": "653054a671a82b9fc812b845",
-//     "searchRecordIds": [
-//         "653056f5ed8f4dd88f27bf95",
-//         "653056f5ed8f4dd88f27bf97",
-//         "653056f5ed8f4dd88f27bf99",
-//         "653056f5ed8f4dd88f27bf9b",
-//         "653056f5ed8f4dd88f27bf9d",
-//         "653056f5ed8f4dd88f27bf9f"
-//     ],
-//     "submitted": false,
-//     "id": "653056f5ed8f4dd88f27bf94"
-// }
 export default SearchHistory;
