@@ -15,8 +15,6 @@ const router = express.Router();
 const BING_SEARCH_URL = 'https://api.bing.microsoft.com/v7.0/search';
 const BING_SEARCH_RESULT_COUNT = 10;
 
-const TAG_TYPE_NUMBER = 3;
-
 async function fetchBingAPI(query : string){
     try{
         const { data } = await axios.get(BING_SEARCH_URL, {
@@ -317,7 +315,7 @@ router.post('/api/search/submitSearchHistory', requireAuth, validateRequest, asy
             searchHistory.submitted = true;
             await searchHistory.save({ session });
         }
-        if(tags.size !== TAG_TYPE_NUMBER){
+        if(!(tags.has("Self-generated") && tags.has("Chat-GPT query") && tags.has("Chat-GPT analogy"))){
             throw new Error('Search history submit failed, please make sure you have finished 3 different types (tags) of queries');
         }
         await session.commitTransaction();
