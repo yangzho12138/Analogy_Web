@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  api:
+    build: ./apis
+    container_name: apis
+    ports:
+      - '6000:6000'
+  client:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - '3000:3000'
+    depends_on:
+      - api
+    stdin_open: true
+    tty: true
