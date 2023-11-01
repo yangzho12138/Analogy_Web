@@ -42,7 +42,7 @@ function SearchHistory({onSearchRecordSelect}) {
         .catch((error) => {
             // Handle any errors
             console.error('Error:', error);
-            alert('An error occurred while submitting data.');
+            alert(error.response.data);
         });
         
     };

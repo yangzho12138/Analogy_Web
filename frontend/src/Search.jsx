@@ -36,6 +36,24 @@ function Search() {
         }
         )};
 
+    const getSelectedConcept = () => {
+        axios.get('/api/concept/getSelected')
+            .then(res => {
+                if (res.status === 200 && Object.keys(res.data).length > 0) {
+                    setConcept(res.data.name);
+                } else {
+                    setConcept('');
+                }
+            })
+            .catch(error => {
+                console.error('Axios error => ', error);
+            });
+    };
+
+    // useEffect(() => {
+    //     getSelectedConcept();
+    // }, []);
+
     const handleSearch = () => {
         if (query.trim() === '' || selectedTag === 'Select tag') {
             alert('Please enter both a search query and select a tag.');
@@ -226,6 +244,9 @@ function Search() {
                         </option>
                     ))}
                 </select>
+                <button className='search-button' onClick={handleSearch}>
+                    < SearchIcon />
+                </button>
                 {selectedTag === 'Chat-GPT query' ||
                             selectedTag === 'Chat-GPT analogy' ||
                             selectedTag === 'Other' ? (
@@ -237,9 +258,6 @@ function Search() {
                                 onChange={e => setLinkInput(e.target.value)}
                             />
                         ) : null}
-                <button className='search-button' onClick={handleSearch}>
-                    < SearchIcon />
-                </button>
             </div>
             
 </>
