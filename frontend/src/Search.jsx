@@ -16,14 +16,8 @@ function Search() {
     const [concept, setConcept] = useState('');
     const tagOptions = ['Select tag','Self-generated', 'Chat-GPT query', 'Chat-GPT analogy','Other'];
     const [selectedConceptId, setSelectedConceptId] = useState('');
+    const [linkInput, setLinkInput] = useState('');
 
-    // item
-    // {
-    //     "name": "Software Engineering",
-    //     "status": false,
-    //     "userId": null,
-    //     "id": "652237e654b65a1d407f4013"
-    // }
     const getAllConcepts = () => {
         axios.get('/api/concept/getAll')
         .then(res => {
@@ -45,8 +39,18 @@ function Search() {
     const handleSearch = () => {
         if (query.trim() === '' || selectedTag === 'Select tag') {
             alert('Please enter both a search query and select a tag.');
-        }else{
-            axios.post('/api/search', { "query":query, "tag":selectedTag, "concept":selectedConceptId })
+        }   
+        else{
+            if (
+                (selectedTag === 'Chat-GPT query' ||
+                selectedTag === 'Chat-GPT analogy' ||
+                selectedTag === 'Other') &&
+                linkInput.trim() === '' // Check if the link input is empty
+            ) {
+                alert('Please paste the Chat-GPT link in the Chat-GPT link box.');
+            }
+            else{
+            axios.post('/api/search', { "query":query, "tag":selectedTag, "concept":selectedConceptId, "link": linkInput })
             .then(response => {
                 if (response.status === 200) {
                     console.log('Search response => ',response.data);
@@ -55,13 +59,12 @@ function Search() {
                     const initialRelevanceData = Array(response.data.length).fill(0);
                     setRelevanceData(initialRelevanceData);
                 }
-            }
-            )
+            })
             .catch(error => {
                 console.error('Search error:', error);
                 alert('Search failed.');
+            });
             }
-            );
         }
     };
 
@@ -183,8 +186,8 @@ function Search() {
                     <Form.Control as="select" value={concept} onClick={getAllConcepts} onChange={e => {
                         setSelectedConceptId(e.target.options[e.target.selectedIndex].value);
                         setConcept(e.target.options[e.target.selectedIndex].text);
-                        console.log('selectedConceptId => ',e.target.options[e.target.selectedIndex].value);
-                        console.log('concept => ',e.target.options[e.target.selectedIndex].text);
+                        // console.log('selectedConceptId => ',e.target.options[e.target.selectedIndex].value);
+                        // console.log('concept => ',e.target.options[e.target.selectedIndex].text);
                     }}>
                         <option value={0} >Select concept</option>
                         {conceptList.map(item => (
@@ -223,6 +226,17 @@ function Search() {
                         </option>
                     ))}
                 </select>
+                {selectedTag === 'Chat-GPT query' ||
+                            selectedTag === 'Chat-GPT analogy' ||
+                            selectedTag === 'Other' ? (
+                            <input
+                                className="search-input"
+                                type="text"
+                                placeholder="Chat-GPT link"
+                                value={linkInput}
+                                onChange={e => setLinkInput(e.target.value)}
+                            />
+                        ) : null}
                 <button className='search-button' onClick={handleSearch}>
                     < SearchIcon />
                 </button>

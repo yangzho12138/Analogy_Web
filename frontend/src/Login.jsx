@@ -63,7 +63,7 @@ function Login(){
         };
       
         // Make an API call to the backend to register the user
-        axios.post('/api/signup', credentials)
+        axios.post('/api/users/signup', credentials)
           .then(response => {
             if (response.status === 201) {
                 alert('Signup successful. You can now log in.');
