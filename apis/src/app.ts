@@ -7,9 +7,11 @@ import { searchRouter } from './routes/searchRoutes'
 import { conceptRouter } from './routes/conceptRoutes'
 import { adminRouter } from './routes/adminRoutes'
 import { currentUser, NotFoundError, errorHandler } from '@ticket_hub/common';
+// import cors from 'cors'
 
 const app = express()
 app.set('trust proxy', true) // https
+// app.use(cors())
 app.use(json())
 app.use(cookieSession({
     signed: false,
