@@ -54,27 +54,31 @@ function Login(){
             alert('Password reset failed.');
           });
     };
-
+      
     const handleSignup = () => {
-        
         const credentials = {
-          email:email,
-          password:password
+            email: email,
+            password: password
         };
-      
-        // Make an API call to the backend to register the user
-        axios.post('/api/users/signup', credentials)
-          .then(response => {
-            if (response.status === 201) {
-                alert('Signup successful. You can now log in.');
-            }
-          })
-          .catch(error => {
-            console.error('Signup error:', error);
-            alert('Signup failed.');
-          });
-      };
-      
+    
+        // Check if the password length is within the required range
+        if (password.length < 4 || password.length > 20) {
+            alert('The password length must be between 4 and 20 characters, both inclusive.');
+        } else {
+            // Make an API call to the backend to register the user
+            axios.post('/api/users/signup', credentials)
+                .then(response => {
+                    if (response.status === 201) {
+                        alert('Signup successful. You can now log in.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Signup error:', error);
+                    alert(error.response.data);
+                });
+        }
+    };
+    
     return(<div className='login-container'>
         {
             isLoggedIn ? (<div>Logged in</div>) : 

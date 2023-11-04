@@ -4,6 +4,8 @@ import axios from 'axios';
 import './Search.css';
 import { Button, Badge, Form } from 'react-bootstrap';
 import SearchHistory from './SearchHistory';
+// import CircularProgress from '@mui/material/CircularProgress';
+import LoadingOverlay from './LoadingOverlay';
 // test123@illinois.edu
 // test123
 function Search() {
@@ -17,6 +19,9 @@ function Search() {
     const tagOptions = ['Select tag','Self-generated', 'Chat-GPT query', 'Chat-GPT analogy','Other'];
     const [selectedConceptId, setSelectedConceptId] = useState('');
     const [linkInput, setLinkInput] = useState('');
+    const [searchHistoryUpdated, setSearchHistoryUpdated] = useState(true);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [saveLoading, setSaveLoading] = useState(false); 
 
     const getAllConcepts = () => {
         axios.get('/api/concept/getAll')
@@ -36,24 +41,6 @@ function Search() {
         }
         )};
 
-    const getSelectedConcept = () => {
-        axios.get('/api/concept/getSelected')
-            .then(res => {
-                if (res.status === 200 && Object.keys(res.data).length > 0) {
-                    setConcept(res.data.name);
-                } else {
-                    setConcept('');
-                }
-            })
-            .catch(error => {
-                console.error('Axios error => ', error);
-            });
-    };
-
-    // useEffect(() => {
-    //     getSelectedConcept();
-    // }, []);
-
     const handleSearch = () => {
         if (query.trim() === '' || selectedTag === 'Select tag') {
             alert('Please enter both a search query and select a tag.');
@@ -68,6 +55,7 @@ function Search() {
                 alert('Please paste the Chat-GPT link in the Chat-GPT link box.');
             }
             else{
+            setSearchLoading(true);
             axios.post('/api/search', { "query":query, "tag":selectedTag, "concept":selectedConceptId, "link": linkInput })
             .then(response => {
                 if (response.status === 200) {
@@ -80,7 +68,11 @@ function Search() {
             })
             .catch(error => {
                 console.error('Search error:', error);
-                alert('Search failed.');
+                alert(error.response.data);
+            })
+            .finally(() => {
+                // Set loading to false when search finishes
+                setSearchLoading(false);
             });
             }
         }
@@ -100,7 +92,7 @@ function Search() {
         })
         .catch(error => {
             console.error('Concept selection error:', error);
-            alert('Concept selection failed.');
+            alert(error.response.data);
         });
     };
 
@@ -119,7 +111,7 @@ function Search() {
         })
         .catch(error => {
             console.error('Concept unselection error:', error);
-            alert('Concept unselection failed.');
+            alert(error.response.data);
         });
     };
     const handleRelevanceChange = (index, isRelevant) => {
@@ -137,6 +129,7 @@ function Search() {
         tag: result.tag,
         isRelevant: relevanceData[index]
     }));
+    setSaveLoading(true);
     console.log('searchData => ',searchData,"type => ",typeof(searchData));
     axios.post('/api/search/saveSearchHistory', {searchRecords:searchData} , {
         headers: {
@@ -146,6 +139,7 @@ function Search() {
         .then((response) => {
         if (response.status === 200) {
             alert('Data saved successfully.');
+            setSearchHistoryUpdated(!searchHistoryUpdated);
         } else {
             alert('Data could not be saved.');
         }
@@ -153,6 +147,9 @@ function Search() {
         .catch((error) => {
         console.error('Error:', error);
         alert(error.response.data);
+        })
+        .finally(() => {
+            setSaveLoading(false); 
         });
     };
 
@@ -172,13 +169,15 @@ function Search() {
         })
         .catch(error => {
             console.error('SearchHistoryDetail error:', error);
-            alert('SearchHistoryDetail fetch failed.');
+            alert(error.response.data);
         })
-        // setSearchResults(selectedRecord.searchResults);
-        // setRelevanceData(selectedRecord.relevanceData);
       };
       
     
+    useEffect(() => {
+        getAllConcepts();
+    },[]);
+
     useEffect(() => {
         if (selectedConceptId && concept) {
             handleChooseConcept();
@@ -187,15 +186,33 @@ function Search() {
     }, [selectedConceptId, concept]);
 
     useEffect(() => {
-        console.log('searchResults => ', searchResults);
-      }, [searchResults]);
-      
+        // Get the selected concept using the GET request
+        axios.get('/api/concept/getSelected')
+            .then(response => {
+                if (response.status === 200 && Object.keys(response.data).length > 0) {
+                    setConcept(response.data.name);
+                    setSelectedConceptId(response.data.id);
+                } else if(response.status === 200 && Object.keys(response.data).length === 0){
+                    setConcept('');
+                }
+            })
+            .catch(error => {
+                console.error('Axios error => ', error);
+            });
+
+        // Call this API only when the component mounts
+        // getAllConcepts();
+    }, []);
+
 
     return (
         
         <div className='search-container'>
+            <LoadingOverlay loading={searchLoading} />
             <div className='search-history-container'>
-                <SearchHistory onSearchRecordSelect={handleSearchRecordSelection} />
+                <SearchHistory 
+                onSearchRecordSelect={handleSearchRecordSelection}
+                searchHistoryUpdated={searchHistoryUpdated} />
             </div>
             {!concept && (
                 <Form>
@@ -204,10 +221,12 @@ function Search() {
                     <Form.Control as="select" value={concept} onClick={getAllConcepts} onChange={e => {
                         setSelectedConceptId(e.target.options[e.target.selectedIndex].value);
                         setConcept(e.target.options[e.target.selectedIndex].text);
-                        // console.log('selectedConceptId => ',e.target.options[e.target.selectedIndex].value);
-                        // console.log('concept => ',e.target.options[e.target.selectedIndex].text);
                     }}>
-                        <option value={0} >Select concept</option>
+                         {conceptList.length === 0 ? (
+                            <option value={0}>No concepts available</option>
+                        ) : (
+                            <option value={0} >Select concept</option>
+                        )}
                         {conceptList.map(item => (
                             <option key={item.id} value={item.id}>
                                 {item.name}
@@ -245,7 +264,12 @@ function Search() {
                     ))}
                 </select>
                 <button className='search-button' onClick={handleSearch}>
-                    < SearchIcon />
+                    {/* {loading ? (
+                        <span><CircularProgress /></span> 
+                    ) : (
+                        <SearchIcon />
+                    )} */}
+                    <SearchIcon />
                 </button>
                 {selectedTag === 'Chat-GPT query' ||
                             selectedTag === 'Chat-GPT analogy' ||
@@ -297,6 +321,7 @@ function Search() {
                     </div>
                 ))}
             </div>
+            <LoadingOverlay loading={saveLoading} />
             {searchResults.length>0 && (
                 <button className='search-save-button' onClick={handleSave}>
                     Save

@@ -4,11 +4,12 @@ import './SearchHistory.css';
 import Badge from 'react-bootstrap/Badge';
 
 
-function SearchHistory({onSearchRecordSelect}) {
+function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
     const [searchHistory, setSearchHistory] = useState([]);
 
     useEffect(() => {
         // Make an API call to fetch search history data
+        if(searchHistoryUpdated || !searchHistoryUpdated) {
         axios.get('/api/search/getAllSearchHistory')
             .then(response => {
                 console.log("Search history data: ", response.data);
@@ -18,7 +19,8 @@ function SearchHistory({onSearchRecordSelect}) {
             .catch(error => {
                 console.error("Error fetching search history data: ", error);
             });
-    }, []);
+        }
+    }, [searchHistoryUpdated]);
     const handleSubmission = (conceptId) => {
         
         // http://localhost:6000/api/search/submitSearchHistory
@@ -55,9 +57,8 @@ function SearchHistory({onSearchRecordSelect}) {
             Object.keys(searchHistory).map(concept => (
                 <div key={concept} className="concept-section">
                     <h3>{concept}</h3>
-                    {searchHistory[concept].length === 0 ? (
-                        <div>No search history for this concept</div>
-                    ) : (
+                    {searchHistory[concept].length === 0 ? (<div>No search history for {concept}</div>) : (
+                        searchHistory[concept][0].submitted ? (<div>Search history for {concept} has been submitted</div>) :(
                         <div className="submit-button-section">
                             {searchHistory[concept].map(conceptData => (
                                 <div key={conceptData.id} className="search-history-concept-row">
@@ -80,7 +81,7 @@ function SearchHistory({onSearchRecordSelect}) {
                             >
                                 {searchHistory[concept][0].submitted ? 'Submitted' : 'Submit'}
                             </button>
-                        </div>
+                        </div>)
                     )}
                 </div>
             ))
