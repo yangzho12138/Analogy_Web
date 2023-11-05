@@ -344,7 +344,7 @@ interface SearchRecordInfo {
 
 // get info of a search record (copy board)
 router.get('/api/search/getSearchRecordInfo', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { searchRecordId } = req.body;
+    const searchRecordId  = req.query.searchRecordId;
 
     if(!searchRecordId) {
         throw new BadRequestError('Invalid search record id');
