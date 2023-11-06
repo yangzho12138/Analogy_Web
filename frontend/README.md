@@ -2,6 +2,16 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+Run the following commands to run the react applicaiton error free on your system
+
+In the /frontend directory run the following command
+### `npm install`
+
+If "react-scripts" is missing from your dependencies, you can install it explicitly by running
+### `npm install react-scripts`
+
+Kickstart the react application
+### `npm start`
 ## Available Scripts
 
 In the project directory, you can run:
