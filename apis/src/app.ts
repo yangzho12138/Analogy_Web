@@ -31,9 +31,9 @@ app.use(searchRouter)
 app.use(conceptRouter)
 app.use(adminRouter)
 
-// app.all('*', async (req, res) => { 
-//     throw new NotFoundError()
-// })
+app.all('*', async (req, res) => { 
+    throw new NotFoundError()
+})
 
 app.use(errorHandler)
 
