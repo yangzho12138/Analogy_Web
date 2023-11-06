@@ -7,8 +7,8 @@ import { searchRouter } from './routes/searchRoutes'
 import { conceptRouter } from './routes/conceptRoutes'
 import { adminRouter } from './routes/adminRoutes'
 import { currentUser, NotFoundError, errorHandler } from '@ticket_hub/common';
-import path from 'path';
-import cors from 'cors'
+// import path from 'path';
+// import cors from 'cors'
 
 const app = express()
 app.set('trust proxy', true) // https
@@ -18,13 +18,12 @@ app.use(cookieSession({
     signed: false,
     // secure: process.env.NODE_ENV !== 'test' // need https request (test env: false -> http)
 }))
-app.use(cors())
 
-app.use(express.static('build'));
-app.get('/anologymp/*', (req, res) => {
-    console.log(__dirname);
-    res.sendFile(path.join(__dirname, "build", "index.html"));
-})
+// app.use(express.static(path.join('build')));
+// app.get('/anologymp/*', (req, res) => {
+//     console.log(__dirname)
+//     res.sendFile(path.join(__dirname, 'build', 'index.html'))
+// })
 
 app.use(currentUser)
 app.use(userRouter)
