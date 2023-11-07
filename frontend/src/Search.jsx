@@ -334,7 +334,7 @@ function Search() {
                             checked={relevanceData[index] === 1}
                             onClick={() => handleRelevanceChange(index, relevanceData[index]===1?0:1)}
                             />
-                            Relevant
+                            Contains relevant analogy
                             <input
                             type='radio'
                             name={`result${index}`}
@@ -342,7 +342,7 @@ function Search() {
                             checked={relevanceData[index] === 2}
                             onClick={() => handleRelevanceChange(index, relevanceData[index]===2?0:2)}
                             />
-                            Non-Relevant
+                            No analogy
                             <input
                             type='radio'
                             name={`result${index}`}
@@ -350,7 +350,7 @@ function Search() {
                             checked={relevanceData[index] === 3}
                             onClick={() => handleRelevanceChange(index, relevanceData[index]===3?0:3)}
                             />
-                            Other
+                            Contains analogy about other concepts
                             <button className="search-copy-button"onClick={() => handleCopy(result.id)} disabled={relevanceData[index]===0}>Copy</button>  
                         </div>
                     </div>
