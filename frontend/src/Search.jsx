@@ -4,7 +4,6 @@ import axios from 'axios';
 import './Search.css';
 import { Button, Badge, Form } from 'react-bootstrap';
 import SearchHistory from './SearchHistory';
-// import CircularProgress from '@mui/material/CircularProgress';
 import LoadingOverlay from './LoadingOverlay';
 // test123@illinois.edu
 // test123
@@ -107,8 +106,7 @@ function Search() {
                 const unselectedConcept = originalConceptList.find(concept => concept.id === selectedConceptId);
                 setConceptList([...conceptList, unselectedConcept]);
                 setConcept('');
-            }
-        })
+        }})
         .catch(error => {
             console.error('Concept unselection error:', error);
             alert(error.response.data);
@@ -190,8 +188,10 @@ function Search() {
         axios.get('/api/concept/getSelected')
             .then(response => {
                 if (response.status === 200 && Object.keys(response.data).length > 0) {
+                    if (selectedConceptId !== response.data.id) {
+                        console.log('Selected concept => ',response.data.id, 'selected concept id',selectedConceptId);
                     setConcept(response.data.name);
-                    setSelectedConceptId(response.data.id);
+                    setSelectedConceptId(response.data.id);}
                 } else if(response.status === 200 && Object.keys(response.data).length === 0){
                     setConcept('');
                 }
@@ -227,10 +227,12 @@ function Search() {
                         ) : (
                             <option value={0} >Select concept</option>
                         )}
-                        {conceptList.map(item => (
+                        {console.log('conceptList => ',conceptList)}
+                        {conceptList && conceptList.length>0 && conceptList.map(item => (
+                            item===undefined ? null:(
                             <option key={item.id} value={item.id}>
                                 {item.name}
-                            </option>
+                            </option>)
                         ))}
                     </Form.Control>
                 </Form.Group>
@@ -264,11 +266,6 @@ function Search() {
                     ))}
                 </select>
                 <button className='search-button' onClick={handleSearch}>
-                    {/* {loading ? (
-                        <span><CircularProgress /></span> 
-                    ) : (
-                        <SearchIcon />
-                    )} */}
                     <SearchIcon />
                 </button>
                 {selectedTag === 'Chat-GPT query' ||
