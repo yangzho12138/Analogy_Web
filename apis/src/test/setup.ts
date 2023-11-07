@@ -6,6 +6,7 @@ import { app } from '../app'
 let mongo : any;
 declare global {
     function signin(): Promise<string[]>;
+    function selectConcept(cookie: string[]): Promise<string>;
 }
 
 beforeAll(async() => {
@@ -36,18 +37,49 @@ afterAll(async () => {
 });
 
 global.signin = async() => {
-    const email = "test@illinois.edu";
+    const email = "test123@illinois.edu";
     const password = "123456";
 
     const response = await request(app)
         .post("/api/users/signup")
         .send({
-        email,
-        password,
+            email,
+            password,
         })
         .expect(201);
 
     const cookie = response.get("Set-Cookie");
 
     return cookie;
+}
+
+global.selectConcept = async() => {
+    const cookie = await global.signin();
+    // add concept
+    await request(app)
+        .post("/api/concept/add")
+        .set('Cookie', cookie)
+        .send({
+            "concepts": [
+                "Data Structure"
+            ]
+        })
+        .expect(201);
+    // get all concepts
+    const response2 = await request(app)
+        .get("/api/concept/getAll")
+        .set('Cookie', cookie)
+        .expect(200)
+    console.log("response2", response2.body)
+    const conceptId = response2.body[0].id
+    // select the concept
+    await request(app)
+        .post("/api/concept/select")
+        .set('Cookie', await global.signin())
+        .send({
+            "concept": conceptId
+        })
+        .expect(200)
+
+    return conceptId;
 }

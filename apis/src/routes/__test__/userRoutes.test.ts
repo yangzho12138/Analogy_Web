@@ -114,7 +114,7 @@ it('response a cookie when given valid credentials', async() => {
     })
     .expect(200)
     expect(response.get('Set-Cookie') ).toBeDefined()
-    console.log(response.get('Set-Cookie'))
+    // console.log(response.get('Set-Cookie'))
 })
 
 // sign out test

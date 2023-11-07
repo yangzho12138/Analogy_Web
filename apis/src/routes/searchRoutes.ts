@@ -14,6 +14,7 @@ import readline from 'readline';
 const router = express.Router();
 const BING_SEARCH_URL = 'https://api.bing.microsoft.com/v7.0/search';
 const BING_SEARCH_RESULT_COUNT = 10;
+const attempts = 20;
 
 async function fetchBingAPI(query : string){
     try{
@@ -238,11 +239,11 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
             if(searchRecord.isPreSet && (searchRecord.preSetVal === true && searchRecords[i].isRelevant === 2 || searchRecord.preSetVal === false && searchRecords[i].isRelevant !== 2) || searchRecords[i].isRelevant === 0){
                 const user = await User.findById(req.currentUser!.id);
                 user!.failedAttempts++;
-                if(user!.failedAttempts >= 3){
+                if(user!.failedAttempts >= attempts){
                     throw new Error('You wasted all attempts, please contact the TA');
                 }else{
                     await user!.save();
-                    throw new Error('Please make sure you finished all parts carefully, you have ' + (3 - user!.failedAttempts) + ' attempts left');
+                    throw new Error('Please make sure you finished all parts carefully, you have ' + (attempts - user!.failedAttempts) + ' attempts left');
                 }
             }
             searchRecord.isRelevant = searchRecords[i].isRelevant;

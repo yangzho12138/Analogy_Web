@@ -3,6 +3,9 @@ import { requireAuth, validateRequest, BadRequestError } from '@ticket_hub/commo
 import mongoose from 'mongoose';
 import { Concept } from '../models/concept';
 import { SearchHistory } from '../models/searchHistory';
+import fs from 'fs';
+import readline from 'readline';
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -37,10 +40,33 @@ router.post('/api/concept/add', requireAuth, validateRequest, async (req: Reques
     }
 });
 
+// read concepts through csv file
+router.post('/api/concept/readCsv', requireAuth, validateRequest, async (req: Request, res: Response) => {
+    const { csvFilePath } = req.body;
+
+    const readStream = fs.createReadStream(csvFilePath);
+    const rl = readline.createInterface({
+        input: readStream,
+        crlfDelay: Infinity
+    });
+
+    let jsonList : Array<string> = [];
+
+    rl.on('line', (line) => {
+        const firstWord = line.split(',')[0].trim();
+        jsonList.push(firstWord);
+    });
+
+    rl.on('close', async() => {
+        const json = JSON.stringify(jsonList);
+        res.status(200).send(json);
+    });
+});
+
 // get all concepts
 router.get('/api/concept/getAll', requireAuth, validateRequest, async (req: Request, res: Response) => {
     const concepts = await Concept.find({status: false});
-
+    console.log(concepts)
     res.status(200).send(concepts);
 });
 
