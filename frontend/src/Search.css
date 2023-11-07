@@ -30,6 +30,11 @@
     text-align: center; 
   }
 
+  .search-concept-submit-button:disabled {
+    background-color: #ccc; 
+    cursor: not-allowed; 
+  }
+
   .search-input {
     border-radius: 20px; 
     border-color: black;

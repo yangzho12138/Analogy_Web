@@ -5,8 +5,7 @@ import './Search.css';
 import { Button, Badge, Form } from 'react-bootstrap';
 import SearchHistory from './SearchHistory';
 import LoadingOverlay from './LoadingOverlay';
-// test123@illinois.edu
-// test123
+
 function Search() {
     const [query, setQuery] = useState('');
     const [selectedTag, setSelectedTag] = useState('Select tag');
@@ -22,6 +21,7 @@ function Search() {
     const [searchLoading, setSearchLoading] = useState(false);
     const [saveLoading, setSaveLoading] = useState(false);
     const [apiData, setApiData] = useState('');
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     const getAllConcepts = () => {
         axios.get('/api/concept/getAll')
@@ -50,7 +50,7 @@ function Search() {
                 (selectedTag === 'Chat-GPT query' ||
                 selectedTag === 'Chat-GPT analogy' ||
                 selectedTag === 'Other') &&
-                linkInput.trim() === '' // Check if the link input is empty
+                linkInput.trim() === ''
             ) {
                 alert('Please paste the Chat-GPT link in the Chat-GPT link box.');
             }
@@ -71,7 +71,6 @@ function Search() {
                 alert(error.response.data);
             })
             .finally(() => {
-                // Set loading to false when search finishes
                 setSearchLoading(false);
             });
             }
@@ -87,6 +86,8 @@ function Search() {
                 const chosenConcept = conceptList.find(concept => concept.id === selectedConceptId);
                 setConceptList(conceptList.filter(item => item.id !== selectedConceptId));
                 setConcept(chosenConcept.name);
+                console.log('handleChooseConcept => ',isSubmitted);
+                setIsSubmitted(true);
                 console.log('Choose API',conceptList);
                 alert('Concept selected successfully.');
             }
@@ -108,6 +109,8 @@ function Search() {
                 const unselectedConcept = originalConceptList.find(concept => concept.id === selectedConceptId);
                 setConceptList([...conceptList, unselectedConcept]);
                 setConcept('');
+                console.log('handleUnselectConcept => ',isSubmitted);
+                setIsSubmitted(false);
         }})
         .catch(error => {
             console.error('Concept unselection error:', error);
@@ -214,15 +217,7 @@ function Search() {
         getAllConcepts();
     },[]);
 
-    // useEffect(() => {
-    //     if (selectedConceptId && concept) {
-    //         handleChooseConcept();
-    //         console.log(selectedConceptId,'-', concept)
-    //     }
-    // }, [selectedConceptId, concept]);
-
     useEffect(() => {
-        // Get the selected concept using the GET request
         axios.get('/api/concept/getSelected')
             .then(response => {
                 if (response.status === 200 && Object.keys(response.data).length > 0) {
@@ -290,7 +285,7 @@ function Search() {
             )}
             
             {concept && (
-                    <Button className='search-concept-submit-button' variant="primary" onClick={handleChooseConcept}>
+                    <Button className='search-concept-submit-button' variant="primary" onClick={handleChooseConcept} disabled={isSubmitted===true}>
                     Submit
                     </Button>
             )}
