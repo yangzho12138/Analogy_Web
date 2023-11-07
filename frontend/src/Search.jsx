@@ -88,6 +88,7 @@ function Search() {
                 setConceptList(conceptList.filter(item => item.id !== selectedConceptId));
                 setConcept(chosenConcept.name);
                 console.log('Choose API',conceptList);
+                alert('Concept selected successfully.');
             }
         })
         .catch(error => {
@@ -213,12 +214,12 @@ function Search() {
         getAllConcepts();
     },[]);
 
-    useEffect(() => {
-        if (selectedConceptId && concept) {
-            handleChooseConcept();
-            console.log(selectedConceptId,'-', concept)
-        }
-    }, [selectedConceptId, concept]);
+    // useEffect(() => {
+    //     if (selectedConceptId && concept) {
+    //         handleChooseConcept();
+    //         console.log(selectedConceptId,'-', concept)
+    //     }
+    // }, [selectedConceptId, concept]);
 
     useEffect(() => {
         // Get the selected concept using the GET request
@@ -236,9 +237,6 @@ function Search() {
             .catch(error => {
                 console.error('Axios error => ', error);
             });
-
-        // Call this API only when the component mounts
-        // getAllConcepts();
     }, []);
 
 
@@ -290,7 +288,13 @@ function Search() {
                     </Badge>
                 </>
             )}
-    
+            
+            {concept && (
+                    <Button className='search-concept-submit-button' variant="primary" onClick={handleChooseConcept}>
+                    Submit
+                    </Button>
+            )}
+
             {concept && (
                 <>
                 <div className='search-bar'>
@@ -320,6 +324,7 @@ function Search() {
             
 </>
             )}
+
             <div className='search-results'>
                 {searchResults.map((result, index) => (
                     <div key={result.id} className='search-result'>

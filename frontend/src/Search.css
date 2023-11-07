@@ -18,6 +18,18 @@
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); 
   }
   
+  .search-concept-submit-button{
+    border-radius: 8px; 
+    background-color: #1e6091; 
+    color: #ffffff; 
+    display: relative; 
+    margin: 0 10px; 
+    padding: 5px 5px; 
+    cursor: pointer; 
+    border: none; 
+    text-align: center; 
+  }
+
   .search-input {
     border-radius: 20px; 
     border-color: black;
