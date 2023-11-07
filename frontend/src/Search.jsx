@@ -88,6 +88,7 @@ function Search() {
                 setConcept(chosenConcept.name);
                 console.log('handleChooseConcept => ',isSubmitted);
                 setIsSubmitted(true);
+                setSearchResults([]);
                 console.log('Choose API',conceptList);
                 alert('Concept selected successfully.');
             }
