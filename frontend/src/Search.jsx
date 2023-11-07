@@ -4,8 +4,8 @@ import axios from 'axios';
 import './Search.css';
 import { Button, Badge, Form } from 'react-bootstrap';
 import SearchHistory from './SearchHistory';
-// test123@illinois.edu
-// test123
+import LoadingOverlay from './LoadingOverlay';
+
 function Search() {
     const [query, setQuery] = useState('');
     const [selectedTag, setSelectedTag] = useState('Select tag');
@@ -16,14 +16,13 @@ function Search() {
     const [concept, setConcept] = useState('');
     const tagOptions = ['Select tag','Self-generated', 'Chat-GPT query', 'Chat-GPT analogy','Other'];
     const [selectedConceptId, setSelectedConceptId] = useState('');
+    const [linkInput, setLinkInput] = useState('');
+    const [searchHistoryUpdated, setSearchHistoryUpdated] = useState(true);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [saveLoading, setSaveLoading] = useState(false);
+    const [apiData, setApiData] = useState('');
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
-    // item
-    // {
-    //     "name": "Software Engineering",
-    //     "status": false,
-    //     "userId": null,
-    //     "id": "652237e654b65a1d407f4013"
-    // }
     const getAllConcepts = () => {
         axios.get('/api/concept/getAll')
         .then(res => {
@@ -45,8 +44,19 @@ function Search() {
     const handleSearch = () => {
         if (query.trim() === '' || selectedTag === 'Select tag') {
             alert('Please enter both a search query and select a tag.');
-        }else{
-            axios.post('/api/search', { "query":query, "tag":selectedTag, "concept":selectedConceptId })
+        }   
+        else{
+            if (
+                (selectedTag === 'Chat-GPT query' ||
+                selectedTag === 'Chat-GPT analogy' ||
+                selectedTag === 'Other') &&
+                linkInput.trim() === ''
+            ) {
+                alert('Please paste the Chat-GPT link in the Chat-GPT link box.');
+            }
+            else{
+            setSearchLoading(true);
+            axios.post('/api/search', { "query":query, "tag":selectedTag, "concept":selectedConceptId, "link": linkInput })
             .then(response => {
                 if (response.status === 200) {
                     console.log('Search response => ',response.data);
@@ -55,13 +65,15 @@ function Search() {
                     const initialRelevanceData = Array(response.data.length).fill(0);
                     setRelevanceData(initialRelevanceData);
                 }
-            }
-            )
+            })
             .catch(error => {
                 console.error('Search error:', error);
-                alert('Search failed.');
+                alert(error.response.data);
+            })
+            .finally(() => {
+                setSearchLoading(false);
+            });
             }
-            );
         }
     };
 
@@ -74,12 +86,16 @@ function Search() {
                 const chosenConcept = conceptList.find(concept => concept.id === selectedConceptId);
                 setConceptList(conceptList.filter(item => item.id !== selectedConceptId));
                 setConcept(chosenConcept.name);
+                console.log('handleChooseConcept => ',isSubmitted);
+                setIsSubmitted(true);
+                setSearchResults([]);
                 console.log('Choose API',conceptList);
+                alert('Concept selected successfully.');
             }
         })
         .catch(error => {
             console.error('Concept selection error:', error);
-            alert('Concept selection failed.');
+            alert(error.response.data);
         });
     };
 
@@ -94,11 +110,12 @@ function Search() {
                 const unselectedConcept = originalConceptList.find(concept => concept.id === selectedConceptId);
                 setConceptList([...conceptList, unselectedConcept]);
                 setConcept('');
-            }
-        })
+                console.log('handleUnselectConcept => ',isSubmitted);
+                setIsSubmitted(false);
+        }})
         .catch(error => {
             console.error('Concept unselection error:', error);
-            alert('Concept unselection failed.');
+            alert(error.response.data);
         });
     };
     const handleRelevanceChange = (index, isRelevant) => {
@@ -108,31 +125,36 @@ function Search() {
       };
     
     const handleSave = () => {
-    const searchData = searchResults.map((result, index) => ({
-        title: result.title,
-        url: result.url,
-        id: result.id,
-        searchHistoryId: result.searchHistoryId,
-        tag: result.tag,
-        isRelevant: relevanceData[index]
-    }));
-    console.log('searchData => ',searchData,"type => ",typeof(searchData));
-    axios.post('/api/search/saveSearchHistory', {searchRecords:searchData} , {
-        headers: {
-        'Content-Type': 'application/json',
-        },
-    })
-        .then((response) => {
-        if (response.status === 200) {
-            alert('Data saved successfully.');
-        } else {
-            alert('Data could not be saved.');
-        }
+        const searchData = searchResults.map((result, index) => ({
+            title: result.title,
+            url: result.url,
+            id: result.id,
+            searchHistoryId: result.searchHistoryId,
+            tag: result.tag,
+            isRelevant: relevanceData[index]
+        }));
+        setSaveLoading(true);
+        console.log('searchData => ',searchData,"type => ",typeof(searchData));
+        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData} , {
+            headers: {
+            'Content-Type': 'application/json',
+            },
         })
-        .catch((error) => {
-        console.error('Error:', error);
-        alert(error.response.data);
-        });
+            .then((response) => {
+            if (response.status === 200) {
+                alert('Data saved successfully.');
+                setSearchHistoryUpdated(!searchHistoryUpdated);
+            } else {
+                alert('Data could not be saved.');
+            }
+            })
+            .catch((error) => {
+            console.error('Error:', error);
+            alert(error.response.data);
+            })
+            .finally(() => {
+                setSaveLoading(false); 
+            });
     };
 
     const handleSearchRecordSelection = (selectedRecordId) => {
@@ -151,30 +173,79 @@ function Search() {
         })
         .catch(error => {
             console.error('SearchHistoryDetail error:', error);
-            alert('SearchHistoryDetail fetch failed.');
+            alert(error.response.data);
         })
-        // setSearchResults(selectedRecord.searchResults);
-        // setRelevanceData(selectedRecord.relevanceData);
-      };
+    };
       
+    const fetchData = async(searchRecordId) => {
+        axios
+        .get(`/api/search/getSearchRecordInfo?searchRecordId=${searchRecordId}`)
+        .then((response) => {
+            console.log('fetchData() response:', response); 
+            setApiData(response.data);
+        })
+        .catch((error) => {
+          console.error('fetchData() error:', error);
+          alert(error.response.data);
+        });
+    };
+    
+    const handleCopy = (searchRecordId) => {
+        try{
+            fetchData(searchRecordId);
+
+            if(!apiData) {
+                alert('No data to copy');
+                return;
+            }
+            const apiDatastring = JSON.stringify(apiData);
+            navigator.clipboard.writeText(apiDatastring)
+            .then(() => {
+            console.log('apiData',apiDatastring);
+            alert('Data copied to clipboard successfully');
+            })
+            .catch((error) => {
+            console.error('Clipboard writeText error:', error);
+            alert('try error',error);
+            });
+        } catch (error) {
+            console.error('handleCopy():', error);
+            alert('catch error',error);
+          }
+    };
     
     useEffect(() => {
-        if (selectedConceptId && concept) {
-            handleChooseConcept();
-            console.log(selectedConceptId,'-', concept)
-        }
-    }, [selectedConceptId, concept]);
+        getAllConcepts();
+    },[]);
 
     useEffect(() => {
-        console.log('searchResults => ', searchResults);
-      }, [searchResults]);
-      
+        axios.get('/api/concept/getSelected')
+            .then(response => {
+                if (response.status === 200 && Object.keys(response.data).length > 0) {
+                    if (selectedConceptId !== response.data.id) {
+                        console.log('Selected concept => ',response.data.id, 'selected concept id',selectedConceptId);
+                    setConcept(response.data.name);
+                    setSelectedConceptId(response.data.id);
+                    setIsSubmitted(true);
+                }
+                } else if(response.status === 200 && Object.keys(response.data).length === 0){
+                    setConcept('');
+                }
+            })
+            .catch(error => {
+                console.error('Axios error => ', error);
+            });
+    }, []);
+
 
     return (
         
         <div className='search-container'>
+            <LoadingOverlay loading={searchLoading} />
             <div className='search-history-container'>
-                <SearchHistory onSearchRecordSelect={handleSearchRecordSelection} />
+                <SearchHistory 
+                onSearchRecordSelect={handleSearchRecordSelection}
+                searchHistoryUpdated={searchHistoryUpdated} />
             </div>
             {!concept && (
                 <Form>
@@ -183,14 +254,18 @@ function Search() {
                     <Form.Control as="select" value={concept} onClick={getAllConcepts} onChange={e => {
                         setSelectedConceptId(e.target.options[e.target.selectedIndex].value);
                         setConcept(e.target.options[e.target.selectedIndex].text);
-                        console.log('selectedConceptId => ',e.target.options[e.target.selectedIndex].value);
-                        console.log('concept => ',e.target.options[e.target.selectedIndex].text);
                     }}>
-                        <option value={0} >Select concept</option>
-                        {conceptList.map(item => (
+                         {conceptList.length === 0 ? (
+                            <option value={0}>No concepts available</option>
+                        ) : (
+                            <option value={0} >Select concept</option>
+                        )}
+                        {console.log('conceptList => ',conceptList)}
+                        {conceptList && conceptList.length>0 && conceptList.map(item => (
+                            item===undefined ? null:(
                             <option key={item.id} value={item.id}>
                                 {item.name}
-                            </option>
+                            </option>)
                         ))}
                     </Form.Control>
                 </Form.Group>
@@ -211,7 +286,13 @@ function Search() {
                     </Badge>
                 </>
             )}
-    
+            
+            {concept && (
+                    <Button className='search-concept-submit-button' variant="primary" onClick={handleChooseConcept} disabled={isSubmitted===true}>
+                    Submit
+                    </Button>
+            )}
+
             {concept && (
                 <>
                 <div className='search-bar'>
@@ -224,12 +305,24 @@ function Search() {
                     ))}
                 </select>
                 <button className='search-button' onClick={handleSearch}>
-                    < SearchIcon />
+                    <SearchIcon />
                 </button>
+                {selectedTag === 'Chat-GPT query' ||
+                            selectedTag === 'Chat-GPT analogy' ||
+                            selectedTag === 'Other' ? (
+                            <input
+                                className="search-input"
+                                type="text"
+                                placeholder="Chat-GPT link"
+                                value={linkInput}
+                                onChange={e => setLinkInput(e.target.value)}
+                            />
+                        ) : null}
             </div>
             
 </>
             )}
+
             <div className='search-results'>
                 {searchResults.map((result, index) => (
                     <div key={result.id} className='search-result'>
@@ -244,7 +337,7 @@ function Search() {
                             checked={relevanceData[index] === 1}
                             onClick={() => handleRelevanceChange(index, relevanceData[index]===1?0:1)}
                             />
-                            Relevant
+                            Contains relevant analogy
                             <input
                             type='radio'
                             name={`result${index}`}
@@ -252,7 +345,7 @@ function Search() {
                             checked={relevanceData[index] === 2}
                             onClick={() => handleRelevanceChange(index, relevanceData[index]===2?0:2)}
                             />
-                            Non-Relevant
+                            No analogy
                             <input
                             type='radio'
                             name={`result${index}`}
@@ -260,11 +353,13 @@ function Search() {
                             checked={relevanceData[index] === 3}
                             onClick={() => handleRelevanceChange(index, relevanceData[index]===3?0:3)}
                             />
-                            Other
+                            Contains analogy about other concepts
+                            <button className="search-copy-button"onClick={() => handleCopy(result.id)} disabled={relevanceData[index]===0}>Copy</button>  
                         </div>
                     </div>
                 ))}
             </div>
+            <LoadingOverlay loading={saveLoading} />
             {searchResults.length>0 && (
                 <button className='search-save-button' onClick={handleSave}>
                     Save
