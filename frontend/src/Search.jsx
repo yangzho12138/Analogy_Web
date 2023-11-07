@@ -225,7 +225,9 @@ function Search() {
                     if (selectedConceptId !== response.data.id) {
                         console.log('Selected concept => ',response.data.id, 'selected concept id',selectedConceptId);
                     setConcept(response.data.name);
-                    setSelectedConceptId(response.data.id);}
+                    setSelectedConceptId(response.data.id);
+                    setIsSubmitted(true);
+                }
                 } else if(response.status === 200 && Object.keys(response.data).length === 0){
                     setConcept('');
                 }
