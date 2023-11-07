@@ -19,6 +19,21 @@
     border: 1px solid black; 
     padding: 10px; 
   }
+
+  .search-history-logout-button{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 120px;
+    height: 30px;
+    color: #fff;
+    background-color: #4c00b4;
+    border-radius: 50px;
+    margin: 10px 100px;
+    font-size: 19px;
+    font-weight:  700;
+    cursor: pointer;
+  }
   
   .search-history-concept-row {
     border: 1px solid gray; 

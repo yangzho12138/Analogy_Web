@@ -4,7 +4,7 @@ import './SearchHistory.css';
 
 function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
     const [searchHistory, setSearchHistory] = useState([]);
-    const [apiData, setApiData] = useState('');
+
     useEffect(() => {
         if(searchHistoryUpdated || !searchHistoryUpdated) {
         axios.get('/api/search/getAllSearchHistory')
@@ -44,8 +44,23 @@ function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
         
     };
 
+    const handleLogout = () => {
+        axios.post('/api/users/signout')
+            .then(response => {
+                console.log("Logout response: ", response);
+                window.location.href = '/login';
+            })
+            .catch(error => {
+                console.error("Error logging out: ", error);
+                alert(error.response.data);
+            });
+    }
+
     return (
         <div className="search-history-container">
+            <div>
+                <button className='search-history-logout-button' variant="primary" onClick={() => handleLogout()}>Logout</button>
+            </div>
         {Object.keys(searchHistory).length === 0 ? (
             <div>No search history</div>
         ) : (

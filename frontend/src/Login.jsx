@@ -3,8 +3,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import axios from 'axios';
 import './Login.css';
-import Search from '@mui/icons-material/Search';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Login(){
     const [action, setAction] = useState('signup');
