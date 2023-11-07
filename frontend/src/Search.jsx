@@ -20,7 +20,8 @@ function Search() {
     const [linkInput, setLinkInput] = useState('');
     const [searchHistoryUpdated, setSearchHistoryUpdated] = useState(true);
     const [searchLoading, setSearchLoading] = useState(false);
-    const [saveLoading, setSaveLoading] = useState(false); 
+    const [saveLoading, setSaveLoading] = useState(false);
+    const [apiData, setApiData] = useState('');
 
     const getAllConcepts = () => {
         axios.get('/api/concept/getAll')
@@ -119,36 +120,36 @@ function Search() {
       };
     
     const handleSave = () => {
-    const searchData = searchResults.map((result, index) => ({
-        title: result.title,
-        url: result.url,
-        id: result.id,
-        searchHistoryId: result.searchHistoryId,
-        tag: result.tag,
-        isRelevant: relevanceData[index]
-    }));
-    setSaveLoading(true);
-    console.log('searchData => ',searchData,"type => ",typeof(searchData));
-    axios.post('/api/search/saveSearchHistory', {searchRecords:searchData} , {
-        headers: {
-        'Content-Type': 'application/json',
-        },
-    })
-        .then((response) => {
-        if (response.status === 200) {
-            alert('Data saved successfully.');
-            setSearchHistoryUpdated(!searchHistoryUpdated);
-        } else {
-            alert('Data could not be saved.');
-        }
+        const searchData = searchResults.map((result, index) => ({
+            title: result.title,
+            url: result.url,
+            id: result.id,
+            searchHistoryId: result.searchHistoryId,
+            tag: result.tag,
+            isRelevant: relevanceData[index]
+        }));
+        setSaveLoading(true);
+        console.log('searchData => ',searchData,"type => ",typeof(searchData));
+        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData} , {
+            headers: {
+            'Content-Type': 'application/json',
+            },
         })
-        .catch((error) => {
-        console.error('Error:', error);
-        alert(error.response.data);
-        })
-        .finally(() => {
-            setSaveLoading(false); 
-        });
+            .then((response) => {
+            if (response.status === 200) {
+                alert('Data saved successfully.');
+                setSearchHistoryUpdated(!searchHistoryUpdated);
+            } else {
+                alert('Data could not be saved.');
+            }
+            })
+            .catch((error) => {
+            console.error('Error:', error);
+            alert(error.response.data);
+            })
+            .finally(() => {
+                setSaveLoading(false); 
+            });
     };
 
     const handleSearchRecordSelection = (selectedRecordId) => {
@@ -169,8 +170,44 @@ function Search() {
             console.error('SearchHistoryDetail error:', error);
             alert(error.response.data);
         })
-      };
+    };
       
+    const fetchData = async(searchRecordId) => {
+        axios
+        .get(`/api/search/getSearchRecordInfo?searchRecordId=${searchRecordId}`)
+        .then((response) => {
+            console.log('fetchData() response:', response); 
+            setApiData(response.data);
+        })
+        .catch((error) => {
+          console.error('fetchData() error:', error);
+          alert(error.response.data);
+        });
+    };
+    
+    const handleCopy = (searchRecordId) => {
+        try{
+            fetchData(searchRecordId);
+
+            if(!apiData) {
+                alert('No data to copy');
+                return;
+            }
+            const apiDatastring = JSON.stringify(apiData);
+            navigator.clipboard.writeText(apiDatastring)
+            .then(() => {
+            console.log('apiData',apiDatastring);
+            alert('Data copied to clipboard successfully');
+            })
+            .catch((error) => {
+            console.error('Clipboard writeText error:', error);
+            alert('try error',error);
+            });
+        } catch (error) {
+            console.error('handleCopy():', error);
+            alert('catch error',error);
+          }
+    };
     
     useEffect(() => {
         getAllConcepts();
@@ -314,6 +351,7 @@ function Search() {
                             onClick={() => handleRelevanceChange(index, relevanceData[index]===3?0:3)}
                             />
                             Other
+                            <button className="search-copy-button"onClick={() => handleCopy(result.id)} disabled={relevanceData[index]===0}>Copy</button>  
                         </div>
                     </div>
                 ))}

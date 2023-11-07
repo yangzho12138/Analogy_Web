@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './SearchHistory.css';
-import Badge from 'react-bootstrap/Badge';
-
 
 function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
     const [searchHistory, setSearchHistory] = useState([]);
     const [apiData, setApiData] = useState('');
     useEffect(() => {
-        // Make an API call to fetch search history data
         if(searchHistoryUpdated || !searchHistoryUpdated) {
         axios.get('/api/search/getAllSearchHistory')
             .then(response => {
@@ -22,8 +19,6 @@ function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
         }
     }, [searchHistoryUpdated]);
     const handleSubmission = (conceptId) => {
-        
-        // http://localhost:6000/api/search/submitSearchHistory
         const submissionData = {
             conceptId: conceptId 
         };
@@ -48,43 +43,6 @@ function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
         });
         
     };
-    
-    const fetchData = async(searchRecordId) => {
-        axios
-        .get(`/api/search/getSearchRecordInfo?searchRecordId=${searchRecordId}`)
-        .then((response) => {
-            console.log('fetchData() response:', response); 
-            setApiData(response.data);
-        })
-        .catch((error) => {
-          console.error('fetchData() error:', error);
-          alert(error.response.data);
-        });
-      };
-    
-    const handleCopy = (searchRecordId) => {
-        try{
-            fetchData(searchRecordId);
-
-            if(!apiData) {
-                alert('No data to copy');
-                return;
-            }
-            const apiDatastring = JSON.stringify(apiData);
-            navigator.clipboard.writeText(apiDatastring)
-            .then(() => {
-            console.log('apiData',apiDatastring);
-            alert('Data copied to clipboard successfully');
-            })
-            .catch((error) => {
-            console.error('Clipboard writeText error:', error);
-            alert('try error',error);
-            });
-        } catch (error) {
-            console.error('handleCopy():', error);
-            alert('catch error',error);
-          }
-      };
 
     return (
         <div className="search-history-container">
@@ -108,8 +66,6 @@ function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
                                     >
                                         {conceptData.searchKeyword}
                                     </button>
-                                    <span></span>
-                                    <button className="search-history-copy-button"onClick={() => handleCopy(conceptData.searchRecordIds[0])}>Copy</button>
                                 </div>
                             ))}
                             <button
@@ -119,7 +75,6 @@ function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
                             >
                                 {searchHistory[concept][0].submitted ? 'Submitted' : 'Submit'}
                             </button>
-                            
                         </div>)
                     )}
                 </div>
