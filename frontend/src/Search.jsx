@@ -133,20 +133,6 @@ function Search() {
             tag: result.tag,
             isRelevant: relevanceData[index]
         }));
-        if(selectedTag === 'Chat-GPT query' || selectedTag === 'Chat-GPT analogy' || selectedTag === 'Other'){
-            savesearchHistorydata = {
-                searchData:searchData,
-                link:linkInput,
-                tag:selectedTag,
-                query:query,
-            }
-        } else if(selectedTag === 'Self-generated'){
-            savesearchHistorydata = {
-                searchData:searchData,
-                tag:selectedTag,
-                query:query,
-            }
-        }
         setSaveLoading(true);
         console.log('searchData => ',searchData,"type => ",typeof(searchData));
         axios.post('/api/search/saveSearchHistory', {searchRecords:searchData, query:query, tag:selectedTag, concept:concept, link:linkInput} , {
