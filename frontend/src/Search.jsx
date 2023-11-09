@@ -157,7 +157,7 @@ function Search() {
             });
     };
 
-    const handleSearchRecordSelection = (selectedRecordId) => {
+    const handleSearchRecordSelection = (selectedRecordId, searchKeyword, tag, link) => {
         console.log('selectedRecord => ',selectedRecordId);
       
         axios.get('/api/search/getSearchHistoryDetail?id='+selectedRecordId)
@@ -168,6 +168,9 @@ function Search() {
             console.log('searchResults => ',searchResults);
             const selectedRelevanceData = response.data.searchRecords.map(result => result.isRelevant);
             setRelevanceData(selectedRelevanceData);
+            setQuery(searchKeyword);
+            setSelectedTag(tag);
+            setLinkInput(link);
             }
 
         })

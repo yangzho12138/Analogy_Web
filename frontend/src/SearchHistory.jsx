@@ -77,7 +77,7 @@ function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
                                     <button
                                         key={conceptData.id}
                                         className="search-history-search-keyword"
-                                        onClick={() => onSearchRecordSelect(conceptData.id)}
+                                        onClick={() => onSearchRecordSelect(conceptData.id, conceptData.searchKeyword, conceptData.tag, conceptData.link?conceptData.link:'')}
                                     >
                                         {conceptData.searchKeyword}
                                     </button>
