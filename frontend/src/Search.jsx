@@ -157,9 +157,9 @@ function Search() {
             });
     };
 
-    const handleSearchRecordSelection = (selectedRecordId, searchKeyword, tag, link) => {
+    const handleSearchRecordSelection = (selectedRecordId, searchKeyword, tag, isconceptSubmitted, link) => {
         console.log('selectedRecord => ',selectedRecordId);
-      
+        setIsSubmitted(isconceptSubmitted);
         axios.get('/api/search/getSearchHistoryDetail?id='+selectedRecordId)
         .then(response => {
             if (response.status === 200) {
@@ -372,7 +372,7 @@ function Search() {
             </div>
             <LoadingOverlay loading={saveLoading} />
             {searchResults.length>0 && (
-                <button className='search-save-button' onClick={handleSave}>
+                <button className='search-save-button' onClick={handleSave} disabled={isSubmitted}>
                     Save
                 </button>)}
         </div>
