@@ -14,14 +14,18 @@ it('search failed due to invalid parameter', async() => {
 })
 
 it('search successfully', async() => {
-    const tag = 'GPT'
+    const tag = 'Self-generated'
+    const cookie = await global.signin();
+    const concept = await global.selectConcept(cookie);
+    console.log("concept", concept)
 
     await request(app)
     .post('/api/search')
-    .set('Cookie', await global.signin())
+    .set('Cookie', cookie)
     .send({
         'query': 'cellphone',
-        'tag': tag
+        'tag': tag,
+        'concept': concept
     })
     .expect(200)
 
@@ -39,28 +43,30 @@ it('search successfully', async() => {
 })
 
 it('change relevant failed due to invalid search record id', async() => {
-    const tag = 'GPT'
-    const user = await global.signin()
+    const tag = 'Self-generated'
+    const cookie = await global.signin()
+    const concept = await global.selectConcept(cookie);
 
     await request(app)
     .post('/api/search')
-    .set('Cookie', user)
+    .set('Cookie', cookie)
     .send({
         'query': 'cellphone',
-        'tag': tag
+        'tag': tag,
+        'concept': concept
     })
     .expect(200)
 
     const response1 = await request(app)
     .post('/api/search/changeRelevant')
-    .set('Cookie', user)
+    .set('Cookie', cookie)
     .send({})
     .expect(400)
     expect(response1.body.errors[0].message).toBe('Invalid searchRecordId');
 
     const response2 = await request(app)
     .post('/api/search/changeRelevant')
-    .set('Cookie', user)
+    .set('Cookie', cookie)
     .send({
         SearchRecordId: '123'
     })

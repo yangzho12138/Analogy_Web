@@ -14,6 +14,7 @@ import readline from 'readline';
 const router = express.Router();
 const BING_SEARCH_URL = 'https://urldefense.com/v3/__https://api.bing.microsoft.com/v7.0/search__;!!DZ3fjg!4uGomE_hQq4_pxEy5nd-WeDKTk3Cnxt2-C7SPSyzzZnyVH-BLMe-aEoHn8QEpzCIeYwoWLPsyHdlsSYG17IaSyqkeg$ ';
 const BING_SEARCH_RESULT_COUNT = 10;
+const attempts = 20;
 
 async function fetchBingAPI(query : string){
     try{
@@ -119,6 +120,8 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
                 isRelevant: 0,
                 tag: tag
             });
+            randomTestCase.userIds.push(req.currentUser!.id);
+            await randomTestCase.save({ session });
             await searchRecord.save({ session });
             searchHistory.searchRecordIds.push(searchRecord.id);
             searchResult.push(searchRecord);
@@ -138,6 +141,8 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
                 isRelevant: 0,
                 tag: tag
             });
+            randomTestCase.userIds.push(req.currentUser!.id);
+            await randomTestCase.save({ session });
             searchRecord.isPreSet = true;
             searchRecord.preSetVal = randomTestCase.label;
             await searchRecord.save({ session });
@@ -238,11 +243,11 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
             if(searchRecord.isPreSet && (searchRecord.preSetVal === true && searchRecords[i].isRelevant === 2 || searchRecord.preSetVal === false && searchRecords[i].isRelevant !== 2) || searchRecords[i].isRelevant === 0){
                 const user = await User.findById(req.currentUser!.id);
                 user!.failedAttempts++;
-                if(user!.failedAttempts >= 3){
+                if(user!.failedAttempts >= attempts){
                     throw new Error('You wasted all attempts, please contact the TA');
                 }else{
                     await user!.save();
-                    throw new Error('Please make sure you finished all parts carefully, you have ' + (3 - user!.failedAttempts) + ' attempts left');
+                    throw new Error('Please make sure you finished all parts carefully, you have ' + (attempts - user!.failedAttempts) + ' attempts left');
                 }
             }
             searchRecord.isRelevant = searchRecords[i].isRelevant;
