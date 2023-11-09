@@ -22,6 +22,7 @@ function Search() {
     const [saveLoading, setSaveLoading] = useState(false);
     const [apiData, setApiData] = useState('');
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isConceptSelected, setIsConceptSelected] = useState(false);
 
     const getAllConcepts = () => {
         axios.get('/api/concept/getAll')
@@ -63,7 +64,8 @@ function Search() {
                     setSearchResults(response.data.map(result => ({ url: result.url, id: result.id, searchHistoryId: result.searchHistoryId, isRelevant: result.isRelevant, tag: result.tag})));
                     console.log('handleSearch searchResults => ',searchResults);
                     const initialRelevanceData = Array(response.data.length).fill(0);
-                    setRelevanceData(initialRelevanceData);
+                    setRelevanceData(initialRelevanceData); 
+                    setIsSubmitted(false);
                 }
             })
             .catch(error => {
@@ -88,6 +90,7 @@ function Search() {
                 setConcept(chosenConcept.name);
                 console.log('handleChooseConcept => ',isSubmitted);
                 setIsSubmitted(true);
+                setIsConceptSelected(true);
                 setSearchResults([]);
                 console.log('Choose API',conceptList);
                 alert('Concept selected successfully.');
@@ -110,6 +113,7 @@ function Search() {
                 const unselectedConcept = originalConceptList.find(concept => concept.id === selectedConceptId);
                 setConceptList([...conceptList, unselectedConcept]);
                 setConcept('');
+                setSearchResults([]);
                 console.log('handleUnselectConcept => ',isSubmitted);
                 setIsSubmitted(false);
         }})
@@ -229,10 +233,11 @@ function Search() {
                         console.log('Selected concept => ',response.data.id, 'selected concept id',selectedConceptId);
                     setConcept(response.data.name);
                     setSelectedConceptId(response.data.id);
-                    setIsSubmitted(true);
+                    setIsConceptSelected(true);
                 }
                 } else if(response.status === 200 && Object.keys(response.data).length === 0){
                     setConcept('');
+                    setIsConceptSelected(false);
                 }
             })
             .catch(error => {
@@ -291,7 +296,7 @@ function Search() {
             )}
             
             {concept && (
-                    <Button className='search-concept-submit-button' variant="primary" onClick={handleChooseConcept} disabled={isSubmitted===true}>
+                    <Button className='search-concept-submit-button' variant="primary" onClick={handleChooseConcept} disabled={isConceptSelected}>
                     Submit
                     </Button>
             )}
@@ -300,7 +305,10 @@ function Search() {
                 <>
                 <div className='search-bar'>
                 <input className='search-input' type='text' placeholder='Search' value={query} onChange={e => setQuery(e.target.value)}/>
-                <select className='search-tag' value={selectedTag} onChange={e => setSelectedTag(e.target.value)}>
+                <select className='search-tag' value={selectedTag} onChange={e => {
+                    setSelectedTag(e.target.value);
+                    setSearchResults([]);
+                }}>
                     {tagOptions.map(tag => (
                         <option key={tag} value={tag}>
                             {tag}
