@@ -135,7 +135,7 @@ function Search() {
         }));
         setSaveLoading(true);
         console.log('searchData => ',searchData,"type => ",typeof(searchData));
-        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData, query:query, tag:selectedTag, concept:concept, link:linkInput} , {
+        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData, query:query, tag:selectedTag, concept:selectedConceptId, link:linkInput} , {
             headers: {
             'Content-Type': 'application/json',
             },
