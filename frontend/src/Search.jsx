@@ -150,7 +150,7 @@ function Search() {
         }
         setSaveLoading(true);
         console.log('searchData => ',searchData,"type => ",typeof(searchData));
-        axios.post('/api/search/saveSearchHistory', {searchRecords:savesearchHistorydata} , {
+        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData, query:query, tag:selectedTag, concept:concept, link:linkInput} , {
             headers: {
             'Content-Type': 'application/json',
             },
