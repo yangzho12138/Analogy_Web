@@ -125,7 +125,7 @@ function Search() {
       };
     
     const handleSave = () => {
-        const savesearchHistorydata = {};
+        let savesearchHistorydata = {};
         const searchData = searchResults.map((result, index) => ({
             title: result.title,
             url: result.url,
