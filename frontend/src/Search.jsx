@@ -354,6 +354,14 @@ function Search() {
                             onClick={() => handleRelevanceChange(index, relevanceData[index]===3?0:3)}
                             />
                             Contains analogy about other concepts
+                            <input
+                            type='radio'
+                            name={`result${index}`}
+                            value={4}
+                            checked={relevanceData[index] === 4}
+                            onClick={() => handleRelevanceChange(index, relevanceData[index] === 4 ? 0 : 4)}
+                            />
+                            Unable to complete annotation
                             <button className="search-copy-button"onClick={() => handleCopy(result.id)} disabled={relevanceData[index]===0}>Copy</button>  
                         </div>
                     </div>
