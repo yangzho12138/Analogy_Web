@@ -23,6 +23,7 @@ function Search() {
     const [apiData, setApiData] = useState('');
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isConceptSelected, setIsConceptSelected] = useState(false);
+    const [isoldSearchresults, setIsoldSearchresults] = useState(false);
 
     const getAllConcepts = () => {
         axios.get('/api/concept/getAll')
@@ -66,6 +67,7 @@ function Search() {
                     const initialRelevanceData = Array(response.data.length).fill(0);
                     setRelevanceData(initialRelevanceData); 
                     setIsSubmitted(false);
+                    setIsoldSearchresults(false);
                 }
             })
             .catch(error => {
@@ -114,6 +116,10 @@ function Search() {
                 setConceptList([...conceptList, unselectedConcept]);
                 setConcept('');
                 setSearchResults([]);
+                setQuery('');
+                setSelectedTag('Select tag');
+                setSelectedConceptId(null);
+                setLinkInput('');
                 console.log('handleUnselectConcept => ',isSubmitted);
                 setIsSubmitted(false);
         }})
@@ -129,6 +135,7 @@ function Search() {
       };
     
     const handleSave = () => {
+        let searchHistoryId = null;
         const searchData = searchResults.map((result, index) => ({
             title: result.title,
             url: result.url,
@@ -139,7 +146,11 @@ function Search() {
         }));
         setSaveLoading(true);
         console.log('searchData => ',searchData,"type => ",typeof(searchData));
-        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData, query:query, tag:selectedTag, concept:selectedConceptId, link:linkInput} , {
+        
+        if(isoldSearchresults){
+            searchHistoryId = searchData[0].searchHistoryId;
+        }
+        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData, query:query, tag:selectedTag, concept:selectedConceptId, link:linkInput, searchHistoryId:searchHistoryId} , {
             headers: {
             'Content-Type': 'application/json',
             },
@@ -154,11 +165,18 @@ function Search() {
             })
             .catch((error) => {
             console.error('Error:', error);
-            alert(error.response.data);
+            if(error.response.data.errors){
+                alert(error.response.data.errors[0].message);
+            }
+            else{
+                alert(error.response.data);
+            }
+                
             })
             .finally(() => {
                 setSaveLoading(false); 
             });
+        
     };
 
     const handleSearchRecordSelection = (selectedRecordId, searchKeyword, tag, isconceptSubmitted, link) => {
@@ -175,6 +193,7 @@ function Search() {
             setQuery(searchKeyword);
             setSelectedTag(tag);
             setLinkInput(link);
+            setIsoldSearchresults(true);
             }
 
         })
