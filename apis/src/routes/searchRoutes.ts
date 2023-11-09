@@ -120,6 +120,8 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
                 isRelevant: 0,
                 tag: tag
             });
+            randomTestCase.userIds.push(req.currentUser!.id);
+            await randomTestCase.save({ session });
             await searchRecord.save({ session });
             searchHistory.searchRecordIds.push(searchRecord.id);
             searchResult.push(searchRecord);
@@ -139,6 +141,8 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
                 isRelevant: 0,
                 tag: tag
             });
+            randomTestCase.userIds.push(req.currentUser!.id);
+            await randomTestCase.save({ session });
             searchRecord.isPreSet = true;
             searchRecord.preSetVal = randomTestCase.label;
             await searchRecord.save({ session });

@@ -5,7 +5,6 @@ import { Concept } from '../models/concept';
 import { SearchHistory } from '../models/searchHistory';
 import fs from 'fs';
 import readline from 'readline';
-import axios from 'axios';
 
 const router = express.Router();
 
