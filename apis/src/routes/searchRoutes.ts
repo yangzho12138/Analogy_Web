@@ -14,7 +14,7 @@ import readline from 'readline';
 const router = express.Router();
 const BING_SEARCH_URL = 'https://api.bing.microsoft.com/v7.0/search';
 const BING_SEARCH_RESULT_COUNT = 10;
-const attempts = 20;
+const attempts = 50;
 
 async function fetchBingAPI(query : string){
     try{
