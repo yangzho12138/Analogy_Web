@@ -65,7 +65,7 @@ router.post('/api/concept/readCsv', requireAuth, validateRequest, async (req: Re
 // get all concepts
 router.get('/api/concept/getAll', requireAuth, validateRequest, async (req: Request, res: Response) => {
     const concepts = await Concept.find({status: false});
-    console.log(concepts)
+    // console.log(concepts)
     res.status(200).send(concepts);
 });
 

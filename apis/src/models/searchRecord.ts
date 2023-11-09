@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 export interface SearchRecordAttrs {
-  searchHistoryId: string;
+  // searchHistoryId: string;
   tag: string;
   isRelevant: number;
   url: string;
@@ -24,7 +24,7 @@ const SearchRecordSchema = new mongoose.Schema(
   {
     searchHistoryId: {
       type: String,
-      required: true,
+      required: false,
     },
     tag: {
       type: String,

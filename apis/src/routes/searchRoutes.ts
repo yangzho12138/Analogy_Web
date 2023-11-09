@@ -72,36 +72,23 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
     const session = await mongoose.startSession();
     session.startTransaction();
     try{
-        const user = await User.findById(req.currentUser!.id);
-        const searchHistory = await SearchHistory.build({
-            userId: req.currentUser!.id,
-            searchKeyword: query,
-            tag: tag,
-            concept: concept,
-            searchRecordIds: []
-        });
-
-        if(tag !== 'Self-generated'){
-            searchHistory.link = link;
-        }
+        // const user = await User.findById(req.currentUser!.id);
             
-        user!.searchHistoryIds.push(searchHistory.id);
+        // user!.searchHistoryIds.push(searchHistory.id);
     
         let searchResult = [];
     
         for(let i = 0; i < data.webPages.value.length; i++){
             const searchRecord = await SearchRecord.build({
-                searchHistoryId: searchHistory.id,
+                // searchHistoryId: searchHistory.id,
                 url: data.webPages.value[i].url,
                 isRelevant: 0,
                 tag: tag
             });
             await searchRecord.save({ session });
-            searchHistory.searchRecordIds.push(searchRecord.id);
+            // searchHistory.searchRecordIds.push(searchRecord.id);
             searchResult.push(searchRecord);
         }
-
-        // TODO: inject test cases
         // randomly choose 2 test cases (type1: no clear labels)
         for(let i = 0; i < 2; i++){
             const testCases = await TestCase.find({
@@ -115,7 +102,7 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
             }
             const randomTestCase = testCases[Math.floor(Math.random() * testCases.length)];
             const searchRecord = await SearchRecord.build({
-                searchHistoryId: searchHistory.id,
+                // searchHistoryId: searchHistory.id,
                 url: randomTestCase.url,
                 isRelevant: 0,
                 tag: tag
@@ -123,7 +110,7 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
             randomTestCase.userIds.push(req.currentUser!.id);
             await randomTestCase.save({ session });
             await searchRecord.save({ session });
-            searchHistory.searchRecordIds.push(searchRecord.id);
+            // searchHistory.searchRecordIds.push(searchRecord.id);
             searchResult.push(searchRecord);
         }
         // randomly choose 1 test case (type2: with clear labels)
@@ -136,7 +123,7 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
         if(testCases.length !== 0){
             const randomTestCase = testCases[Math.floor(Math.random() * testCases.length)];
             const searchRecord = await SearchRecord.build({
-                searchHistoryId: searchHistory.id,
+                // searchHistoryId: searchHistory.id,
                 url: randomTestCase.url,
                 isRelevant: 0,
                 tag: tag
@@ -146,12 +133,12 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
             searchRecord.isPreSet = true;
             searchRecord.preSetVal = randomTestCase.label;
             await searchRecord.save({ session });
-            searchHistory.searchRecordIds.push(searchRecord.id);
+            // searchHistory.searchRecordIds.push(searchRecord.id);
             searchResult.push(searchRecord);
         }
     
-        await searchHistory.save({ session });
-        await user!.save({ session });
+        // await searchHistory.save({ session });
+        // await user!.save({ session });
 
         await session.commitTransaction();
 
@@ -222,9 +209,16 @@ router.get('/api/search/getSearchHistoryDetail', requireAuth, validateRequest, a
 
 // save search history for a user
 // allow to change isRelevant, relevantContent and tag
-// TODO: check whether test cases are valid
 router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async (req: Request, res: Response) => {
-    const { searchRecords } = req.body;
+    const { searchRecords, query, tag, concept, link, searchHistoryId } = req.body;
+
+    if(!query || !tag || !concept) {
+        throw new BadRequestError('Invalid query, tag, concept or link');
+    }
+
+    if(tag !== 'Self-generated' && !link){
+        throw new BadRequestError('You must enter the gpt link for non self-generated query');
+    }
 
     if(!searchRecords || !Array.isArray(searchRecords)) {
         throw new BadRequestError('Invalid search history');
@@ -233,27 +227,57 @@ router.post('/api/search/saveSearchHistory', requireAuth, validateRequest, async
     const session = await mongoose.startSession();
     session.startTransaction();
 
+    let searchHistory = null;
+    if(!searchHistoryId){
+        searchHistory = await SearchHistory.build({
+            userId: req.currentUser!.id,
+            searchKeyword: query,
+            tag: tag,
+            concept: concept,
+            searchRecordIds: []
+        });
+    } else{
+        searchHistory = await SearchHistory.findById(searchHistoryId);
+        if(!searchHistory || searchHistory.userId !== req.currentUser!.id){
+            throw new BadRequestError('Invalid search history id');
+        }
+        searchHistory.searchRecordIds = [];
+        searchHistory.searchKeyword = query;
+        searchHistory.tag = tag;
+        searchHistory.concept = concept;
+    }
+
+    if(tag !== 'Self-generated'){
+        searchHistory.link = link;
+    }
+
+    const user = await User.findById(req.currentUser!.id);
+    user!.searchHistoryIds.push(searchHistory.id);
+
     try{
         for(let i = 0; i < searchRecords.length; i++){
             const searchRecord = await SearchRecord.findById(searchRecords[i].id);
             if(!searchRecord){
                 throw new Error('No search record found');
             }
+            searchHistory.searchRecordIds.push(searchRecord.id);
             // check all search records are finished and the test cases is finished correctly
             if(searchRecord.isPreSet && (searchRecord.preSetVal === true && searchRecords[i].isRelevant === 2 || searchRecord.preSetVal === false && searchRecords[i].isRelevant !== 2) || searchRecords[i].isRelevant === 0){
-                const user = await User.findById(req.currentUser!.id);
                 user!.failedAttempts++;
+                await user!.save();
                 if(user!.failedAttempts >= attempts){
                     throw new Error('You wasted all attempts, please contact the TA');
                 }else{
-                    await user!.save();
                     throw new Error('Please make sure you finished all parts carefully, you have ' + (attempts - user!.failedAttempts) + ' attempts left');
                 }
             }
+            searchRecord.searchHistoryId = searchHistory.id;
             searchRecord.isRelevant = searchRecords[i].isRelevant;
             searchRecord.tag = searchRecords[i].tag;
             await searchRecord.save({ session });
         }
+        await searchHistory.save({ session });
+        await user!.save({ session });
         await session.commitTransaction();
 
         res.status(200).send('Search records saved');
