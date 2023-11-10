@@ -204,27 +204,31 @@ function Search() {
     };
       
     const fetchData = async(searchRecordId) => {
-        axios
-        .get(`/api/search/getSearchRecordInfo?searchRecordId=${searchRecordId}`)
-        .then((response) => {
-            console.log('fetchData() response:', response); 
-            setApiData(response.data);
-        })
-        .catch((error) => {
-          console.error('fetchData() error:', error);
-          alert(error.response.data);
+        return new Promise((resolve, reject) => {
+            axios
+            .get(`/api/search/getSearchRecordInfo?searchRecordId=${searchRecordId}`)
+            .then((response) => {
+                console.log('fetchData() response:', response); 
+                // setApiData(response.data);
+                resolve(response.data);
+            })
+            .catch((error) => {
+            console.error('fetchData() error:', error);
+            alert(error.response.data);
+            reject(error.response.data);
+            });
         });
     };
     
-    const handleCopy = (searchRecordId) => {
+    const handleCopy = async (searchRecordId) => {
         try{
-            fetchData(searchRecordId);
-
-            if(!apiData) {
+            let fetchedData = await fetchData(searchRecordId);
+            // console.log('fetched Data =>',fetchedData);
+            if(!fetchedData) {
                 alert('No data to copy');
                 return;
             }
-            const apiDatastring = JSON.stringify(apiData);
+            const apiDatastring = JSON.stringify(fetchedData);
             navigator.clipboard.writeText(apiDatastring)
             .then(() => {
             console.log('apiData',apiDatastring);
