@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express'
 import { body } from 'express-validator'
 import jwt from 'jsonwebtoken'
 import { User } from '../models/users';
+import { Concept } from '../models/concept';
 import { validateRequest, BadRequestError } from '@ticket_hub/common';
 import { Password } from '../utils/password';
 
@@ -70,6 +71,28 @@ router.post('/api/users/signin', [
 router.post('/api/users/signout', (req, res) => {
     req.session = null
     res.send({})
+})
+
+// get the students email who already finished this MP
+router.get('/api/users/finishedUsers', async (req: Request, res: Response) => {
+    // find users who have searchHistoryIds with size >= 6
+    const users = await User.find({
+        searchHistoryIds: { $exists: true, $not: { $size: 0 } },
+        $expr: { $gte: [ { $size: "$searchHistoryIds" }, 6 ] }
+    });
+
+    let finishedUsers = [];
+    for(let i = 0; i < users.length; i++) {
+        const concepts = await Concept.find({
+            userId: users[i].id,
+            submitted: true
+        });
+        if(concepts.length >= 2) {
+            finishedUsers.push(users[i].email);
+        }
+    }
+
+    res.status(200).send(finishedUsers);
 })
 
 export { router as userRouter };
