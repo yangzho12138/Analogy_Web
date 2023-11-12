@@ -68,7 +68,25 @@ function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
                 <div key={concept} className="concept-section">
                     <h3>{concept}</h3>
                     {searchHistory[concept].length === 0 ? (<div>No search history for {concept}</div>) : (
-                        searchHistory[concept][0].submitted ? (<div>Search history for {concept} has been submitted</div>) :(
+                        searchHistory[concept][0].submitted ? 
+                        (
+                            <div className="submit-button-section">
+                                {searchHistory[concept].map(conceptData => (
+                                    <div key={conceptData.id} className="search-history-concept-row">
+                                        <span className="search-history-custom-badge-class">{conceptData.tag}</span>
+                                        <br/>
+                                        <button
+                                            key={conceptData.id}
+                                            className="search-history-search-keyword"
+                                            onClick={() => onSearchRecordSelect(conceptData.id, conceptData.searchKeyword, conceptData.tag, conceptData.submitted, conceptData.link?conceptData.link:'')}
+                                        >
+                                            {conceptData.searchKeyword}
+                                        </button>
+                                    </div>
+                                ))}
+                                <button className='search-history-submit-button' disabled>Submitted</button>
+                            </div>) 
+                        :(
                         <div className="submit-button-section">
                             {searchHistory[concept].map(conceptData => (
                                 <div key={conceptData.id} className="search-history-concept-row">
@@ -77,7 +95,7 @@ function SearchHistory({onSearchRecordSelect, searchHistoryUpdated}) {
                                     <button
                                         key={conceptData.id}
                                         className="search-history-search-keyword"
-                                        onClick={() => onSearchRecordSelect(conceptData.id, conceptData.searchKeyword, conceptData.tag, conceptData.link?conceptData.link:'')}
+                                        onClick={() => onSearchRecordSelect(conceptData.id, conceptData.searchKeyword, conceptData.tag, conceptData.submitted, conceptData.link?conceptData.link:'')}
                                     >
                                         {conceptData.searchKeyword}
                                     </button>

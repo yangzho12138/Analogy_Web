@@ -122,6 +122,7 @@ input[type="text"] {
     text-align: center; 
   }
   
-  .search-save-button:hover {
-    background-color: #174d7a; 
+  .search-save-button:disabled {
+    background-color: #ccc; 
+    cursor: not-allowed; 
   }

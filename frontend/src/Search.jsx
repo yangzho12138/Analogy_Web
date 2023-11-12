@@ -22,6 +22,8 @@ function Search() {
     const [saveLoading, setSaveLoading] = useState(false);
     const [apiData, setApiData] = useState('');
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isConceptSelected, setIsConceptSelected] = useState(false);
+    const [isoldSearchresults, setIsoldSearchresults] = useState(false);
 
     const getAllConcepts = () => {
         axios.get('/api/concept/getAll')
@@ -63,7 +65,9 @@ function Search() {
                     setSearchResults(response.data.map(result => ({ url: result.url, id: result.id, searchHistoryId: result.searchHistoryId, isRelevant: result.isRelevant, tag: result.tag})));
                     console.log('handleSearch searchResults => ',searchResults);
                     const initialRelevanceData = Array(response.data.length).fill(0);
-                    setRelevanceData(initialRelevanceData);
+                    setRelevanceData(initialRelevanceData); 
+                    setIsSubmitted(false);
+                    setIsoldSearchresults(false);
                 }
             })
             .catch(error => {
@@ -88,6 +92,7 @@ function Search() {
                 setConcept(chosenConcept.name);
                 console.log('handleChooseConcept => ',isSubmitted);
                 setIsSubmitted(true);
+                setIsConceptSelected(true);
                 setSearchResults([]);
                 console.log('Choose API',conceptList);
                 alert('Concept selected successfully.');
@@ -110,6 +115,11 @@ function Search() {
                 const unselectedConcept = originalConceptList.find(concept => concept.id === selectedConceptId);
                 setConceptList([...conceptList, unselectedConcept]);
                 setConcept('');
+                setSearchResults([]);
+                setQuery('');
+                setSelectedTag('Select tag');
+                setSelectedConceptId(null);
+                setLinkInput('');
                 console.log('handleUnselectConcept => ',isSubmitted);
                 setIsSubmitted(false);
         }})
@@ -125,6 +135,7 @@ function Search() {
       };
     
     const handleSave = () => {
+        let searchHistoryId = null;
         const searchData = searchResults.map((result, index) => ({
             title: result.title,
             url: result.url,
@@ -135,7 +146,11 @@ function Search() {
         }));
         setSaveLoading(true);
         console.log('searchData => ',searchData,"type => ",typeof(searchData));
-        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData, query:query, tag:selectedTag, concept:selectedConceptId, link:linkInput} , {
+        
+        if(isoldSearchresults){
+            searchHistoryId = searchData[0].searchHistoryId;
+        }
+        axios.post('/api/search/saveSearchHistory', {searchRecords:searchData, query:query, tag:selectedTag, concept:selectedConceptId, link:linkInput, searchHistoryId:searchHistoryId} , {
             headers: {
             'Content-Type': 'application/json',
             },
@@ -150,16 +165,23 @@ function Search() {
             })
             .catch((error) => {
             console.error('Error:', error);
-            alert(error.response.data);
+            if(error.response.data.errors){
+                alert(error.response.data.errors[0].message);
+            }
+            else{
+                alert(error.response.data);
+            }
+                
             })
             .finally(() => {
                 setSaveLoading(false); 
             });
+        
     };
 
-    const handleSearchRecordSelection = (selectedRecordId, searchKeyword, tag, link) => {
+    const handleSearchRecordSelection = (selectedRecordId, searchKeyword, tag, isconceptSubmitted, link) => {
         console.log('selectedRecord => ',selectedRecordId);
-      
+        setIsSubmitted(isconceptSubmitted);
         axios.get('/api/search/getSearchHistoryDetail?id='+selectedRecordId)
         .then(response => {
             if (response.status === 200) {
@@ -171,6 +193,7 @@ function Search() {
             setQuery(searchKeyword);
             setSelectedTag(tag);
             setLinkInput(link);
+            setIsoldSearchresults(true);
             }
 
         })
@@ -181,27 +204,31 @@ function Search() {
     };
       
     const fetchData = async(searchRecordId) => {
-        axios
-        .get(`/api/search/getSearchRecordInfo?searchRecordId=${searchRecordId}`)
-        .then((response) => {
-            console.log('fetchData() response:', response); 
-            setApiData(response.data);
-        })
-        .catch((error) => {
-          console.error('fetchData() error:', error);
-          alert(error.response.data);
+        return new Promise((resolve, reject) => {
+            axios
+            .get(`/api/search/getSearchRecordInfo?searchRecordId=${searchRecordId}`)
+            .then((response) => {
+                console.log('fetchData() response:', response); 
+                // setApiData(response.data);
+                resolve(response.data);
+            })
+            .catch((error) => {
+            console.error('fetchData() error:', error);
+            alert(error.response.data);
+            reject(error.response.data);
+            });
         });
     };
     
-    const handleCopy = (searchRecordId) => {
+    const handleCopy = async (searchRecordId) => {
         try{
-            fetchData(searchRecordId);
-
-            if(!apiData) {
+            let fetchedData = await fetchData(searchRecordId);
+            // console.log('fetched Data =>',fetchedData);
+            if(!fetchedData) {
                 alert('No data to copy');
                 return;
             }
-            const apiDatastring = JSON.stringify(apiData);
+            const apiDatastring = JSON.stringify(fetchedData);
             navigator.clipboard.writeText(apiDatastring)
             .then(() => {
             console.log('apiData',apiDatastring);
@@ -229,10 +256,11 @@ function Search() {
                         console.log('Selected concept => ',response.data.id, 'selected concept id',selectedConceptId);
                     setConcept(response.data.name);
                     setSelectedConceptId(response.data.id);
-                    setIsSubmitted(true);
+                    setIsConceptSelected(true);
                 }
                 } else if(response.status === 200 && Object.keys(response.data).length === 0){
                     setConcept('');
+                    setIsConceptSelected(false);
                 }
             })
             .catch(error => {
@@ -291,7 +319,7 @@ function Search() {
             )}
             
             {concept && (
-                    <Button className='search-concept-submit-button' variant="primary" onClick={handleChooseConcept} disabled={isSubmitted===true}>
+                    <Button className='search-concept-submit-button' variant="primary" onClick={handleChooseConcept} disabled={isConceptSelected}>
                     Submit
                     </Button>
             )}
@@ -300,7 +328,10 @@ function Search() {
                 <>
                 <div className='search-bar'>
                 <input className='search-input' type='text' placeholder='Search' value={query} onChange={e => setQuery(e.target.value)}/>
-                <select className='search-tag' value={selectedTag} onChange={e => setSelectedTag(e.target.value)}>
+                <select className='search-tag' value={selectedTag} onChange={e => {
+                    setSelectedTag(e.target.value);
+                    setSearchResults([]);
+                }}>
                     {tagOptions.map(tag => (
                         <option key={tag} value={tag}>
                             {tag}
@@ -372,7 +403,7 @@ function Search() {
             </div>
             <LoadingOverlay loading={saveLoading} />
             {searchResults.length>0 && (
-                <button className='search-save-button' onClick={handleSave}>
+                <button className='search-save-button' onClick={handleSave} disabled={isSubmitted}>
                     Save
                 </button>)}
         </div>
