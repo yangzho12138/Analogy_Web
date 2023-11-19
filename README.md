@@ -20,9 +20,9 @@ Backend (Typescript + Express): Yang Zhou
 
 /apis/src/index.ts: confirm env setting, conncet to the database, connect to the server port
 
-/common: middlewares and error handlers 
+/common: middlewares and error handlers
 
-common code already packed into a NPM Package 
+common code already packed into a NPM Package
 
 ```
 npm i @analogy_web/common
@@ -35,3 +35,5 @@ npm start
 ```
 
 in the apis folder to run the backend application
+
+You could find more about this MP in the following link: https://docs.google.com/document/d/1FFNmufQVbrwcQYBo0y_17EGeCl31uoY5uo5MEIKv24o/edit?usp=sharing
