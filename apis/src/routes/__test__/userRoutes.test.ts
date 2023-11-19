@@ -51,6 +51,16 @@ it('fails when the email is already in use', async() => {
     .expect(400)
 })
 
+it('signup successfully', async() => {
+    await request(app)
+    .post('/api/users/signup')
+    .send({
+        'email': 'yz96@illinois.edu',
+        'password': '123456'
+    })
+    .expect(201)
+})
+
 // sign in test
 it('fails when the email is not valid', async() => {
     const response = await request(app)

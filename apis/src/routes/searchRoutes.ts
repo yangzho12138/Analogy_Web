@@ -147,7 +147,7 @@ router.post('/api/search', requireAuth, validateRequest, async (req: Request, re
         res.status(200).send(searchResult);
     } catch(err){
         await session.abortTransaction();
-        res.status(500).send('Error saving search history');
+        res.status(500).send('Error in searching');
     } finally{
         await session.endSession();
     }
@@ -477,6 +477,58 @@ router.post('/api/search/insertTestCases', requireAuth, validateRequest, async (
         }
         return res.json(data);
     });
+})
+
+// export all search histories
+router.get('/api/search/export', async (req: Request, res: Response) => {
+    const searchRecords = await SearchRecord.find({
+        isRelevant: { $ne: 0 }
+    });
+
+    const data = [];
+    for(let i = 0; i < searchRecords.length; i++){
+        const searchRecord = searchRecords[i];
+        const searchHistory = await SearchHistory.findOne({
+            searchRecordIds: { $in: searchRecord.id }
+        });
+        if(!searchHistory){
+            throw new Error('No search history found');
+        }
+        const concept = await Concept.findById(searchHistory.concept);
+        if(!concept){
+            throw new Error('No concept found');
+        }
+        const user = await User.findById(searchHistory.userId);
+        if(!user){
+            throw new Error('No user found');
+        }
+        data.push({
+            url: searchRecord.url,
+            isRelevant: searchRecord.isRelevant,
+            tag: searchHistory.tag,
+            concept: concept.name,
+            query: searchHistory.searchKeyword,
+            user: user.email,
+            link: searchHistory.link
+        });
+        console.log(data);
+    }
+
+    // write into json file
+    const chunks = chunkArray(data, 5000);
+    for(let i = 0; i < chunks.length; i++){
+        const json = JSON.stringify(chunks[i]);
+        fs.writeFile('searchHistories' + i + '.json', json, 'utf8', (err) => {
+            if (err) {
+                console.log('Error writing file', err);
+                throw new Error('Error writing file');
+            } else {
+                console.log('Successfully wrote file');
+            }
+        });
+    }
+
+    res.status(200).send('Search histories exported');
 })
 
 export { router as searchRouter };

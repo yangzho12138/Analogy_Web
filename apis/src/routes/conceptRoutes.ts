@@ -94,7 +94,7 @@ router.post('/api/concept/select', requireAuth, validateRequest, async (req: Req
         return res.status(500).send('Concept not found or already selected');
     }
 
-    res.status(201).send({existingConcept});
+    res.status(200).send({existingConcept});
 });
 
 // unselect concepts
@@ -128,7 +128,7 @@ router.post('/api/concept/unselect', requireAuth, validateRequest, async (req: R
         if(!releasedConcept){
             res.status(500).send('Concept not found');
         }
-        res.status(201).send({releasedConcept});
+        res.status(200).send({releasedConcept});
     } catch(err) {
         res.status(500).send('Error unselecting concept');
     }
